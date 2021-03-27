@@ -6,7 +6,7 @@
     "react",
     "react render"
   ],
-  "main": "index.js",
+  "main": "index.umd.js",
   "module": "index.js",
   "typings": "./",
   "repository": "https://github.com/m78-core/render-api",

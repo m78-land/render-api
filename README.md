@@ -1,10 +1,9 @@
 <h1 align="center" style="font-size: 80px;color:#61dafb">🔌</h1>
 <h1 align="center" style="color: #61dafb;">RenderApi</h1>
 
-
 <br>
 
-<p align="center">render react components through api</p>
+<p align="center">通过调用api来渲染react组件</p>
 
 <br>
 
