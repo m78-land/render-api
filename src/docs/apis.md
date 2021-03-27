@@ -3,10 +3,9 @@ title: API
 order: 3
 ---
 
-
 ## RenderApiComponentBaseProps
 
-实现组件会接受的基础props, 可用于描述实现组件的props
+实现组件会接受的基础 props, 可用于描述实现组件的 props
 
 ```ts
 interface RenderApiComponentBaseProps<S> {
@@ -19,12 +18,11 @@ interface RenderApiComponentBaseProps<S> {
 
 ## create(opt)
 
-接收配置并创建一个api实例
+接收配置并创建一个 api 实例
 
 ```ts
-function create<S>(opt: RenderApiOption<S>): RenderApiInstance<S>
+function create<S>(opt: RenderApiOption<S>): RenderApiInstance<S>;
 ```
-
 
 ## RenderApiOption
 
@@ -45,10 +43,9 @@ interface RenderApiOption<S> {
 }
 ```
 
-
 ## RenderApiInstance
 
-api实例，通过`create()`方法创建
+api 实例，通过`create()`方法创建
 
 ```ts
 interface RenderApiInstance<S> {
@@ -78,7 +75,7 @@ interface RenderApiInstance<S> {
 
 ## RenderApiComponentInstance
 
-调用render后生成的组件实例
+调用 render 后生成的组件实例
 
 ```ts
 interface RenderApiComponentInstance<S> {
@@ -95,10 +92,9 @@ interface RenderApiComponentInstance<S> {
 }
 ```
 
-
 ## RenderApiComponentMixState
 
-一个扩展至state的对象，除了组件状态外还包含一些内部添加的状态
+一个扩展至 state 的对象，除了组件状态外还包含一些内部添加的状态
 
 ```ts
 type RenderApiComponentMixState<S> = S & {
