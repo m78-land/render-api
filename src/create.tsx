@@ -7,19 +7,13 @@ import {
   RenderApiComponentInstance,
   RenderApiInstance,
   RenderApiOption,
+  ComponentItem,
 } from './types';
 
-/** 实例的元信息 */
-interface ComponentItem<S> {
-  id: string;
-  state: RenderApiComponentMixState<S>;
-  instance: RenderApiComponentInstance<S>;
-  updateFlag: number;
-}
-
-function create<S>(opt: RenderApiOption<S>): RenderApiInstance<S> {
+function create<S, Extend = null>(opt: RenderApiOption<S>): RenderApiInstance<S, Extend> {
   /** 混合内部属性的State */
   type MixState = RenderApiComponentMixState<S>;
+  type MixInstance = RenderApiComponentInstance<S, Extend>;
 
   const {
     component: Component,
@@ -43,6 +37,8 @@ function create<S>(opt: RenderApiOption<S>): RenderApiInstance<S> {
     event: {
       update: updateEvent,
     },
+    defaultState,
+    maxInstance,
   };
 
   function hide(id: string) {
@@ -100,8 +96,10 @@ function create<S>(opt: RenderApiOption<S>): RenderApiInstance<S> {
   function render(state: S) {
     const id = createRandString();
 
+    const maxIns = ctx.maxInstance;
+
     const _state: MixState = {
-      ...defaultState,
+      ...ctx.defaultState,
       ...state,
       open: true,
     };
@@ -112,6 +110,7 @@ function create<S>(opt: RenderApiOption<S>): RenderApiInstance<S> {
       hide: hide.bind(null, id),
       show: show.bind(null, id),
       dispose: dispose.bind(null, id),
+      current: null,
     };
 
     ctx.list.push({
@@ -121,13 +120,13 @@ function create<S>(opt: RenderApiOption<S>): RenderApiInstance<S> {
       updateFlag: 0,
     });
 
-    if (maxInstance && ctx.list.length > maxInstance) {
+    if (maxIns && ctx.list.length > maxIns) {
       ctx.list.splice(0, 1);
     }
 
     updateEvent.emit();
 
-    return instance;
+    return instance as MixInstance;
   }
 
   /** 根据实例信息设置其状态 */
@@ -187,8 +186,12 @@ function create<S>(opt: RenderApiOption<S>): RenderApiInstance<S> {
     hideAll: () => setAllOpen(false),
     showAll: () => setAllOpen(true),
     disposeAll,
-    getInstances: () => ctx.list.map(item => item.instance),
+    getInstances: () => ctx.list.map(item => item.instance as MixInstance),
     events: ctx.event,
+    setDefaultState: state => (ctx.defaultState = state),
+    getDefaultState: () => ctx.defaultState,
+    setMaxInstance: max => (ctx.maxInstance = max),
+    getMaxInstance: () => ctx.maxInstance,
   };
 }
 

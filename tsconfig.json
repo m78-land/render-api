@@ -38,5 +38,8 @@
     "rollup.config.js",
     "babel.config.js"
   ],
-  "exclude": []
+  "exclude": [
+    "dist/**/*",
+    "docs/**/*"
+  ]
 }

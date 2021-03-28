@@ -23,6 +23,7 @@ yarn-error.log*
 .vscode
 .cache
 .umi
+.umi-production
 *.suo
 *.ntvs*
 *.njsproj

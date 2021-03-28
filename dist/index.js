@@ -66,6 +66,7 @@ function create(opt) {
             hide: hide.bind(null, id),
             show: show.bind(null, id),
             dispose: dispose.bind(null, id),
+            current: null,
         };
         ctx.list.push({
             id: id,
