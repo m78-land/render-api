@@ -38,6 +38,14 @@ export interface RenderApiInstance<S, Extend> {
         /** 实例列表发生改变(增加或减少) */
         update: ReturnType<typeof createEvent>;
     };
+    /** 设置默认state */
+    setDefaultState: (state: Partial<S>) => void;
+    /** 获取的默认state */
+    getDefaultState: () => Partial<S> | undefined;
+    /** 设置最大实例数 */
+    setMaxInstance: (max: number) => void;
+    /** 获取最大实例数 */
+    getMaxInstance: () => number | undefined;
 }
 /** 实现组件会接受的基础props, 可用于描述实现组件的props */
 export interface RenderApiComponentBaseProps<S> {

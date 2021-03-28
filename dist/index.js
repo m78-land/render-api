@@ -15,6 +15,8 @@ function create(opt) {
         event: {
             update: updateEvent,
         },
+        defaultState: defaultState,
+        maxInstance: maxInstance,
     };
     function hide(id) {
         var current = getItemById(id);
@@ -59,7 +61,8 @@ function create(opt) {
     /** 创建并渲染一个实例 */
     function render(state) {
         var id = createRandString();
-        var _state = __assign(__assign(__assign({}, defaultState), state), { open: true });
+        var maxIns = ctx.maxInstance;
+        var _state = __assign(__assign(__assign({}, ctx.defaultState), state), { open: true });
         var instance = {
             setState: setStateById.bind(null, id),
             state: _state,
@@ -74,7 +77,7 @@ function create(opt) {
             instance: instance,
             updateFlag: 0,
         });
-        if (maxInstance && ctx.list.length > maxInstance) {
+        if (maxIns && ctx.list.length > maxIns) {
             ctx.list.splice(0, 1);
         }
         updateEvent.emit();
@@ -125,6 +128,10 @@ function create(opt) {
         disposeAll: disposeAll,
         getInstances: function () { return ctx.list.map(function (item) { return item.instance; }); },
         events: ctx.event,
+        setDefaultState: function (state) { return (ctx.defaultState = state); },
+        getDefaultState: function () { return ctx.defaultState; },
+        setMaxInstance: function (max) { return (ctx.maxInstance = max); },
+        getMaxInstance: function () { return ctx.maxInstance; },
     };
 }
 
