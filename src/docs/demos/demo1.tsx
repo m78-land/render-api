@@ -1,7 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import MyModalApi from './my-modal-api';
 
 const Demo1 = () => {
+  useEffect(() => {
+    MyModalApi.events.change.on(() => {
+      console.log(123123123);
+    });
+  }, []);
+
   function renderHandle() {
     // 每次render执行会返回一个RenderApiComponentInstance实例对象, 可以管理该实例的各种状态和行为
     MyModalApi.render({
@@ -22,7 +28,7 @@ const Demo1 = () => {
 
       <div>
         <button onClick={renderHandle}>show modal</button>
-        <button onClick={MyModalApi.hideAll}>hide all</button>
+        <button onClick={MyModalApi.disposeAll}>hide all</button>
       </div>
     </div>
   );

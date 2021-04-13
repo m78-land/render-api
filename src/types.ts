@@ -38,7 +38,9 @@ export interface RenderApiInstance<S, Extend> {
   getInstances: () => Array<RenderApiComponentInstance<S, Extend>>;
   /** 可用事件对象 */
   events: {
-    /** 实例列表发生改变(增加或减少) */
+    /** 实例数量发生改变 */
+    change: ReturnType<typeof createEvent>;
+    /** 实例改变时触发的事件(状态、数量等) */
     update: ReturnType<typeof createEvent>;
   };
   /** 设置默认state */

@@ -30,12 +30,15 @@ function create<S, Extend = null>(opt: RenderApiOption<S>): RenderApiInstance<S,
 
   /** 实例更新通知 */
   const updateEvent = createEvent();
+  /** 实例长度变更 */
+  const changeEvent = createEvent();
 
   /** 在内部共享的状态对象 */
   const ctx = {
     list: [] as ComponentItem<S>[],
     event: {
       update: updateEvent,
+      change: changeEvent,
     },
     defaultState,
     maxInstance,
@@ -71,11 +74,13 @@ function create<S, Extend = null>(opt: RenderApiOption<S>): RenderApiInstance<S,
     ctx.list.splice(ind, 1);
 
     updateEvent.emit();
+    changeEvent.emit();
   }
 
   function disposeAll() {
     ctx.list = [];
     updateEvent.emit();
+    changeEvent.emit();
   }
 
   /** 设置所有实例的开启或关闭状态 */
@@ -125,6 +130,7 @@ function create<S, Extend = null>(opt: RenderApiOption<S>): RenderApiInstance<S,
     }
 
     updateEvent.emit();
+    changeEvent.emit();
 
     return instance as MixInstance;
   }

@@ -6728,11 +6728,14 @@
         var MemoComponent = React__default['default'].memo(Component, function (prev, next) { return prev._updateFlag === next._updateFlag; });
         /** 实例更新通知 */
         var updateEvent = createEvent();
+        /** 实例长度变更 */
+        var changeEvent = createEvent();
         /** 在内部共享的状态对象 */
         var ctx = {
             list: [],
             event: {
                 update: updateEvent,
+                change: changeEvent,
             },
             defaultState: defaultState,
             maxInstance: maxInstance,
@@ -6763,10 +6766,12 @@
                 return;
             ctx.list.splice(ind, 1);
             updateEvent.emit();
+            changeEvent.emit();
         }
         function disposeAll() {
             ctx.list = [];
             updateEvent.emit();
+            changeEvent.emit();
         }
         /** 设置所有实例的开启或关闭状态 */
         function setAllOpen(open) {
@@ -6800,6 +6805,7 @@
                 ctx.list.splice(0, 1);
             }
             updateEvent.emit();
+            changeEvent.emit();
             return instance;
         }
         /** 根据实例信息设置其状态 */
