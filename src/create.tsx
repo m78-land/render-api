@@ -1,18 +1,17 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { createEvent } from '@lxjx/hooks';
-import { createRandString, getPortalsNode } from '@lxjx/utils';
+import { AnyFunction, createRandString, getPortalsNode } from '@lxjx/utils';
 import ReactDom from 'react-dom';
 import {
-  RenderApiComponentMixState,
   RenderApiComponentInstance,
   RenderApiInstance,
   RenderApiOption,
   ComponentItem,
 } from './types';
 
-function create<S, Extend = null>(opt: RenderApiOption<S>): RenderApiInstance<S, Extend> {
-  /** 混合内部属性的State */
-  type MixState = RenderApiComponentMixState<S>;
+function create<S extends object, Extend = null>(
+  opt: RenderApiOption<S>,
+): RenderApiInstance<S, Extend> {
   type MixInstance = RenderApiComponentInstance<S, Extend>;
 
   const {
@@ -21,6 +20,7 @@ function create<S, Extend = null>(opt: RenderApiOption<S>): RenderApiInstance<S,
     wrap: Wrap,
     maxInstance,
     namespace = 'RENDER__BOX',
+    controlKey = 'open',
   } = opt;
 
   const MemoComponent = React.memo(
@@ -35,35 +35,37 @@ function create<S, Extend = null>(opt: RenderApiOption<S>): RenderApiInstance<S,
 
   /** 在内部共享的状态对象 */
   const ctx = {
-    list: [] as ComponentItem<S>[],
+    list: [] as ComponentItem[],
     event: {
       update: updateEvent,
       change: changeEvent,
     },
     defaultState,
     maxInstance,
+    /** target是否已渲染, 未渲染时调用render会渲染默认Target */
+    targetIsRender: false,
   };
 
   function hide(id: string) {
     const current = getItemById(id);
 
     if (!current) return;
-    if (!current.state.open) return;
+    if (!current.state[controlKey]) return;
 
     setStateByCurrent(current, {
-      open: false,
-    });
+      [controlKey]: false,
+    } as any);
   }
 
   function show(id: string) {
     const current = getItemById(id);
 
     if (!current) return;
-    if (current.state.open) return;
+    if (current.state[controlKey]) return;
 
     setStateByCurrent(current, {
-      open: true,
-    });
+      [controlKey]: true,
+    } as any);
   }
 
   function dispose(id: string) {
@@ -89,8 +91,8 @@ function create<S, Extend = null>(opt: RenderApiOption<S>): RenderApiInstance<S,
       setStateByCurrent(
         item,
         {
-          open,
-        },
+          [controlKey]: open,
+        } as any,
         false,
       ),
     );
@@ -103,20 +105,47 @@ function create<S, Extend = null>(opt: RenderApiOption<S>): RenderApiInstance<S,
 
     const maxIns = ctx.maxInstance;
 
-    const _state: MixState = {
+    const _state: S = {
       ...ctx.defaultState,
       ...state,
-      open: true,
+      [controlKey]: true,
     };
 
-    const instance: RenderApiComponentInstance<S> = {
+    let innerInstance: any = null;
+    /** 存储所有safe操作, 并在RenderApiComponentInstance.current存在时调用 */
+    const unsafeCallQueue: AnyFunction[] = [];
+
+    const instance: RenderApiComponentInstance<S, any> = {
       setState: setStateById.bind(null, id),
       state: _state,
       hide: hide.bind(null, id),
       show: show.bind(null, id),
       dispose: dispose.bind(null, id),
       current: null,
+      safe: cb => {
+        if (!cb) return;
+        if (innerInstance) {
+          cb();
+          return;
+        }
+
+        unsafeCallQueue.push(cb);
+      },
     };
+
+    // 实例被设置时接收通知
+    Object.defineProperty(instance, 'current', {
+      get() {
+        return innerInstance;
+      },
+      set(ins) {
+        innerInstance = ins;
+        // 在实例可用后, 如果unsafeCallQueue存在内容, 则全部进行处理
+        if (unsafeCallQueue.length) {
+          unsafeCallQueue.splice(0, unsafeCallQueue.length).forEach(cb => cb());
+        }
+      },
+    });
 
     ctx.list.push({
       id,
@@ -132,15 +161,16 @@ function create<S, Extend = null>(opt: RenderApiOption<S>): RenderApiInstance<S,
     updateEvent.emit();
     changeEvent.emit();
 
+    if (!ctx.targetIsRender) {
+      ctx.targetIsRender = true;
+      mountDefaultTarget();
+    }
+
     return instance as MixInstance;
   }
 
   /** 根据实例信息设置其状态 */
-  function setStateByCurrent(
-    current: ComponentItem<S>,
-    nState: Partial<RenderApiComponentMixState<{}>>,
-    autoUpdate = true,
-  ) {
+  function setStateByCurrent(current: ComponentItem, nState: Partial<S>, autoUpdate = true) {
     Object.assign(current.state, nState);
 
     current.updateFlag += 1;
@@ -149,7 +179,7 @@ function create<S, Extend = null>(opt: RenderApiOption<S>): RenderApiInstance<S,
   }
 
   /** 设置指定id的实例状态 */
-  function setStateById(id: string, nState: Partial<RenderApiComponentMixState<{}>>) {
+  function setStateById(id: string, nState: Partial<S>) {
     const ind = getIndexById(id);
     if (ind === -1) return;
     setStateByCurrent(ctx.list[ind], nState);
@@ -165,8 +195,17 @@ function create<S, Extend = null>(opt: RenderApiOption<S>): RenderApiInstance<S,
     return ctx.list.findIndex(item => item.id === id);
   }
 
+  function mountDefaultTarget() {
+    const container = document.createElement('div');
+    container.setAttribute('data-describe', 'this is render-api default target');
+    document.body.appendChild(container);
+    ReactDom.render(<RenderBoxTarget />, container);
+  }
+
   /** 挂载点 */
   function RenderBoxTarget() {
+    useMemo(() => (ctx.targetIsRender = true), []);
+
     const [, update] = useState(0);
 
     updateEvent.useEvent(() => {
@@ -175,9 +214,7 @@ function create<S, Extend = null>(opt: RenderApiOption<S>): RenderApiInstance<S,
 
     function renderList() {
       return ctx.list.map(({ id, instance, state, updateFlag }) => {
-        return (
-          <MemoComponent key={id} instance={instance} state={state} _updateFlag={updateFlag} />
-        );
+        return <MemoComponent {...state} key={id} instance={instance} _updateFlag={updateFlag} />;
       });
     }
 

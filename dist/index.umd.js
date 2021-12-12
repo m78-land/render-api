@@ -6724,7 +6724,7 @@
     });
 
     function create(opt) {
-        var Component = opt.component, defaultState = opt.defaultState, Wrap = opt.wrap, maxInstance = opt.maxInstance, _a = opt.namespace, namespace = _a === void 0 ? 'RENDER__BOX' : _a;
+        var Component = opt.component, defaultState = opt.defaultState, Wrap = opt.wrap, maxInstance = opt.maxInstance, _a = opt.namespace, namespace = _a === void 0 ? 'RENDER__BOX' : _a, _b = opt.controlKey, controlKey = _b === void 0 ? 'open' : _b;
         var MemoComponent = React__default['default'].memo(Component, function (prev, next) { return prev._updateFlag === next._updateFlag; });
         /** 实例更新通知 */
         var updateEvent = createEvent();
@@ -6739,26 +6739,30 @@
             },
             defaultState: defaultState,
             maxInstance: maxInstance,
+            /** target是否已渲染, 未渲染时调用render会渲染默认Target */
+            targetIsRender: false,
         };
         function hide(id) {
+            var _a;
             var current = getItemById(id);
             if (!current)
                 return;
-            if (!current.state.open)
+            if (!current.state[controlKey])
                 return;
-            setStateByCurrent(current, {
-                open: false,
-            });
+            setStateByCurrent(current, (_a = {},
+                _a[controlKey] = false,
+                _a));
         }
         function show(id) {
+            var _a;
             var current = getItemById(id);
             if (!current)
                 return;
-            if (current.state.open)
+            if (current.state[controlKey])
                 return;
-            setStateByCurrent(current, {
-                open: true,
-            });
+            setStateByCurrent(current, (_a = {},
+                _a[controlKey] = true,
+                _a));
         }
         function dispose(id) {
             var ind = getIndexById(id);
@@ -6776,17 +6780,22 @@
         /** 设置所有实例的开启或关闭状态 */
         function setAllOpen(open) {
             ctx.list.forEach(function (item) {
-                return setStateByCurrent(item, {
-                    open: open,
-                }, false);
+                var _a;
+                return setStateByCurrent(item, (_a = {},
+                    _a[controlKey] = open,
+                    _a), false);
             });
             updateEvent.emit();
         }
         /** 创建并渲染一个实例 */
         function render(state) {
+            var _a;
             var id = createRandString();
             var maxIns = ctx.maxInstance;
-            var _state = __assign$1(__assign$1(__assign$1({}, ctx.defaultState), state), { open: true });
+            var _state = __assign$1(__assign$1(__assign$1({}, ctx.defaultState), state), (_a = {}, _a[controlKey] = true, _a));
+            var innerInstance = null;
+            /** 存储所有safe操作, 并在RenderApiComponentInstance.current存在时调用 */
+            var unsafeCallQueue = [];
             var instance = {
                 setState: setStateById.bind(null, id),
                 state: _state,
@@ -6794,7 +6803,29 @@
                 show: show.bind(null, id),
                 dispose: dispose.bind(null, id),
                 current: null,
+                safe: function (cb) {
+                    if (!cb)
+                        return;
+                    if (innerInstance) {
+                        cb();
+                        return;
+                    }
+                    unsafeCallQueue.push(cb);
+                },
             };
+            // 实例被设置时接收通知
+            Object.defineProperty(instance, 'current', {
+                get: function () {
+                    return innerInstance;
+                },
+                set: function (ins) {
+                    innerInstance = ins;
+                    // 在实例可用后, 如果unsafeCallQueue存在内容, 则全部进行处理
+                    if (unsafeCallQueue.length) {
+                        unsafeCallQueue.splice(0, unsafeCallQueue.length).forEach(function (cb) { return cb(); });
+                    }
+                },
+            });
             ctx.list.push({
                 id: id,
                 state: _state,
@@ -6806,6 +6837,10 @@
             }
             updateEvent.emit();
             changeEvent.emit();
+            if (!ctx.targetIsRender) {
+                ctx.targetIsRender = true;
+                mountDefaultTarget();
+            }
             return instance;
         }
         /** 根据实例信息设置其状态 */
@@ -6830,8 +6865,15 @@
         function getIndexById(id) {
             return ctx.list.findIndex(function (item) { return item.id === id; });
         }
+        function mountDefaultTarget() {
+            var container = document.createElement('div');
+            container.setAttribute('data-describe', 'this is render-api default target');
+            document.body.appendChild(container);
+            ReactDom__default['default'].render(React__default['default'].createElement(RenderBoxTarget, null), container);
+        }
         /** 挂载点 */
         function RenderBoxTarget() {
+            React.useMemo(function () { return (ctx.targetIsRender = true); }, []);
             var _a = React.useState(0), update = _a[1];
             updateEvent.useEvent(function () {
                 update(function (p) { return p + 1; });
@@ -6839,7 +6881,7 @@
             function renderList() {
                 return ctx.list.map(function (_a) {
                     var id = _a.id, instance = _a.instance, state = _a.state, updateFlag = _a.updateFlag;
-                    return (React__default['default'].createElement(MemoComponent, { key: id, instance: instance, state: state, _updateFlag: updateFlag }));
+                    return React__default['default'].createElement(MemoComponent, __assign$1({}, state, { key: id, instance: instance, _updateFlag: updateFlag }));
                 });
             }
             var node = Wrap ? React__default['default'].createElement(Wrap, null, renderList()) : renderList();

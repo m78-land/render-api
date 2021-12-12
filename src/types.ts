@@ -4,7 +4,10 @@ import { AnyFunction } from '@lxjx/utils';
 
 export type ComponentType<P = any> = React.ComponentType<P> | AnyFunction;
 
-/** create() 方法接收的配置对象 */
+/**
+ * create() 方法接收的配置对象
+ * @param S - 实现组件接收的额外props
+ * */
 export interface RenderApiOption<S> {
   /** 交由api渲染的组件，该组件接受RenderApiComponentProps */
   component: ComponentType<RenderApiComponentBaseProps<any>>;
@@ -16,7 +19,18 @@ export interface RenderApiOption<S> {
   maxInstance?: number;
   /** 将实例渲染到指定命名空间的节点下, 而不是使用默认的渲染节点 */
   namespace?: string;
+  /** 'open' | 自行定义控制组件显示/隐藏的props key */
+  controlKey?: string;
 }
+
+/**
+ * 实现组件会接受的基础props, 实现组件可以继承此类型作为基础props
+ * @param S - 组件能够接收的状态, 对应实现组件的扩展props
+ * */
+export type RenderApiComponentBaseProps<S> = S & {
+  /** 当前实例 */
+  instance: RenderApiComponentInstance<S, any>;
+};
 
 /** api实例，通过create()方法创建 */
 export interface RenderApiInstance<S, Extend> {
@@ -26,6 +40,7 @@ export interface RenderApiInstance<S, Extend> {
    * 实例的挂载组件，一般会放在组件树的根节点下，并且应该避免其被延迟渲染
    * - 此配置存在的目的是保证外部挂载的组件被解析到主react实例树中从而使得React context等api正常可用
    * - 挂载位置与渲染位置无关，最终都会渲染到body下
+   * - 如果RenderBoxTarget在第一次运行render时仍没有没渲染, 则会自动渲染到body下, 此时将不能再正常在渲染的组件内接收context等
    * */
   RenderBoxTarget: ComponentType;
   /** 关闭全部实例 */
@@ -53,22 +68,12 @@ export interface RenderApiInstance<S, Extend> {
   getMaxInstance: () => number | undefined;
 }
 
-/** 实现组件会接受的基础props, 可用于描述实现组件的props */
-export interface RenderApiComponentBaseProps<S> {
-  /** 组件状态 */
-  state: RenderApiComponentMixState<S>;
-  /** 当前实例 */
-  instance: RenderApiComponentInstance<S>;
-}
-
-/** 向state中添加内置状态 */
-export type RenderApiComponentMixState<S> = S & {
-  /** 是否开启 */
-  open: boolean;
-};
-
-/** 调用render后生成的组件实例 */
-export interface RenderApiComponentInstance<S, C = null> {
+/**
+ * 调用render后生成的实例
+ * @param S - 组件接收的状态
+ * @param C - 组件内部对外暴露的实例, 组件内部可通过对此项直接赋值来扩展api的能力
+ * */
+export interface RenderApiComponentInstance<S, C> {
   /** 隐藏 */
   hide: () => void;
   /** 显示 */
@@ -76,17 +81,23 @@ export interface RenderApiComponentInstance<S, C = null> {
   /** 销毁 */
   dispose: () => void;
   /** 组件共享到外部的状态 */
-  state: RenderApiComponentMixState<S>;
+  state: S;
   /** 更新state状态 */
-  setState: (nState: Partial<RenderApiComponentMixState<S>>) => void;
+  setState: (nState: Partial<S>) => void;
   /** 存放组件内部对外暴露的属性和方法，由于组件渲染过程是异步的，所以此属性会延迟设置，如果实现组件未扩展任何东西则始终为null */
-  current: C | null;
+  current: C;
+  /**
+   * 由于组件的渲染是异步的, current在创建render实例后并不能马上访问
+   * 此时可以通过safe调用来安全的访问实例, safe会在实例可用后立刻进行回调
+   * 通常实现组件渲染的时间都非常的短, 所以只要不是在render后立刻访问, 直接使用instance.current访问实例也是可行的
+   * */
+  safe: (cb: () => void) => void;
 }
 
-/** 实例的元信息 */
-export interface ComponentItem<S> {
+/** 内部使用的实例的元信息 */
+export interface ComponentItem {
   id: string;
-  state: RenderApiComponentMixState<S>;
-  instance: RenderApiComponentInstance<S>;
+  state: any;
+  instance: RenderApiComponentInstance<any, any>;
   updateFlag: number;
 }

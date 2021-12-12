@@ -1,6 +1,6 @@
 {
   "name": "@m78/render-api",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "render react components through api",
   "keywords": [
     "react",
