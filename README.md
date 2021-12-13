@@ -7,7 +7,7 @@
 
 <br>
 
-[link to doc](http://llixianjie.gitee.io/m78/docs/view/view-num/)
+[link to doc](http://llixianjie.gitee.io/m78/docs/utils/render-api)
 
 <br>
 
