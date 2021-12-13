@@ -117,6 +117,13 @@
 
       return portalsEl;
     };
+    function defer(fn) {
+      for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+        args[_key3 - 1] = arguments[_key3];
+      }
+
+      return setTimeout.apply(void 0, [fn, 1].concat(args));
+    }
 
     function getGlobal() {
       // eslint-disable-next-line no-restricted-globals
@@ -6835,12 +6842,13 @@
             if (maxIns && ctx.list.length > maxIns) {
                 ctx.list.splice(0, 1);
             }
-            updateEvent.emit();
-            changeEvent.emit();
             if (!ctx.targetIsRender) {
                 ctx.targetIsRender = true;
-                mountDefaultTarget();
+                // 可能会在瞬间接收到多个render请求, 延迟选人target以同时处理初始化的多个render
+                defer(mountDefaultTarget);
             }
+            updateEvent.emit();
+            changeEvent.emit();
             return instance;
         }
         /** 根据实例信息设置其状态 */

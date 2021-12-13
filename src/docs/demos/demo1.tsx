@@ -14,6 +14,26 @@ const Demo1 = () => {
       ),
     });
 
+    MyModalApi.render({
+      title: '这是modal的标题1',
+      content: (
+        <div>
+          <div>这是model的内容</div>
+          可以放置<strong>任意</strong>内容
+        </div>
+      ),
+    });
+
+    MyModalApi.render({
+      title: '这是modal的标题1',
+      content: (
+        <div>
+          <div>这是model的内容</div>
+          可以放置<strong>任意</strong>内容
+        </div>
+      ),
+    });
+
     // render实例
     console.log(1, instance);
 

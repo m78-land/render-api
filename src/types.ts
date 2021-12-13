@@ -24,7 +24,7 @@ export interface RenderApiOption<S> {
 }
 
 /**
- * 实现组件会接受的基础props, 实现组件可以继承此类型作为基础props
+ * 实现组件会接受的基础props, 实现组件可以以此类型作为基础props
  * @param S - 组件能够接收的状态, 对应实现组件的扩展props
  * */
 export type RenderApiComponentBaseProps<S> = S & {

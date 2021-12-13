@@ -1,7 +1,7 @@
 import { __assign } from 'tslib';
 import React, { useMemo, useState } from 'react';
 import { createEvent } from '@lxjx/hooks';
-import { createRandString, getPortalsNode } from '@lxjx/utils';
+import { createRandString, defer, getPortalsNode } from '@lxjx/utils';
 import ReactDom from 'react-dom';
 
 function create(opt) {
@@ -116,12 +116,13 @@ function create(opt) {
         if (maxIns && ctx.list.length > maxIns) {
             ctx.list.splice(0, 1);
         }
-        updateEvent.emit();
-        changeEvent.emit();
         if (!ctx.targetIsRender) {
             ctx.targetIsRender = true;
-            mountDefaultTarget();
+            // 可能会在瞬间接收到多个render请求, 延迟选人target以同时处理初始化的多个render
+            defer(mountDefaultTarget);
         }
+        updateEvent.emit();
+        changeEvent.emit();
         return instance;
     }
     /** 根据实例信息设置其状态 */

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { createEvent } from '@lxjx/hooks';
-import { AnyFunction, createRandString, getPortalsNode } from '@lxjx/utils';
+import { AnyFunction, createRandString, defer, getPortalsNode } from '@lxjx/utils';
 import ReactDom from 'react-dom';
 import {
   RenderApiComponentInstance,
@@ -158,13 +158,14 @@ function create<S extends object, Extend = null>(
       ctx.list.splice(0, 1);
     }
 
-    updateEvent.emit();
-    changeEvent.emit();
-
     if (!ctx.targetIsRender) {
       ctx.targetIsRender = true;
-      mountDefaultTarget();
+      // 可能会在瞬间接收到多个render请求, 延迟选人target以同时处理初始化的多个render
+      defer(mountDefaultTarget);
     }
+
+    updateEvent.emit();
+    changeEvent.emit();
 
     return instance as MixInstance;
   }
