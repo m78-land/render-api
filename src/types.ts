@@ -25,6 +25,11 @@ export interface RenderApiComponentProps<S, I = null> extends RenderApiComponent
 export interface RenderApiComponentBaseProps<S, I = null> {
   /** 通知上层组件销毁本组件的实例 */
   onDispose: () => void;
+  /**
+   * 更新state, 效果与RenderApiComponentInstance.setState相同, 区别是此回调由实现组件调用
+   * 使用此回调来通知外部组件更新传递给自身的state
+   * */
+  onUpdate: RenderApiComponentInstance<S, I>['setState'];
   /** 当需要对外暴露更多的api时使用, 将额外的api挂载到此ref */
   instanceRef: RefCallback<I>;
 }

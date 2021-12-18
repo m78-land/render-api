@@ -156,8 +156,9 @@ function create<S extends object, I = null>(opt: RenderApiOption<S>): RenderApiI
         changeEvent.emit();
       },
 
-      // RenderApiComponentBaseProps
+      // below RenderApiComponentBaseProps
       onDispose: dispose.bind(null, id),
+      onUpdate: setStateById.bind(null, id),
       instanceRef: (instance: I | null) => {
         innerInstance = instance;
         // 在实例可用后, 如果unsafeCallQueue存在内容, 则全部进行处理
@@ -172,7 +173,7 @@ function create<S extends object, I = null>(opt: RenderApiOption<S>): RenderApiI
       show: show.bind(null, id),
       dispose: dispose.bind(null, id),
       state: _state as any,
-      setState: setStateById.bind(null, id),
+      setState: _state.onUpdate,
       current: null,
       safe: cb => {
         if (!cb) return;
