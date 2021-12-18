@@ -30,13 +30,13 @@
     "build:doc": "dumi build"
   },
   "dependencies": {
-    "@lxjx/hooks": "^1.16.4",
-    "@lxjx/utils": "^1.11.1",
-    "@types/react": "^17.0.3",
-    "@types/react-dom": "^17.0.3",
+    "@lxjx/hooks": "^1.22.5",
+    "@lxjx/utils": "^1.15.0",
+    "@types/react": "^17.0.37",
+    "@types/react-dom": "^17.0.11",
     "react": "^17.0.1",
     "react-dom": "^17.0.2",
-    "tslib": "^2.1.0"
+    "tslib": "^2.3.1"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.13.12",
