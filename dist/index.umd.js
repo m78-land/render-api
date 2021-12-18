@@ -56,10 +56,14 @@
         return __assign$1.apply(this, arguments);
     };
 
-    function __spreadArray(to, from) {
-        for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
-            to[j] = from[i];
-        return to;
+    function __spreadArray(to, from, pack) {
+        if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+            if (ar || !(i in from)) {
+                if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+                ar[i] = from[i];
+            }
+        }
+        return to.concat(ar || Array.prototype.slice.call(from));
     }
 
     /**
@@ -101,62 +105,7 @@
         };
     }
 
-    /**
-     * 检测是否为字符串
-     * @param {*} arg - 需待查询的对象
-     * @returns {boolean}
-     * */
-
-    function isString(arg) {
-      return typeof arg === 'string';
-    }
-    function omit(obj, props) {
-      if (isString(props)) {
-        props = props.split(',').map(function (key) {
-          return key.trim();
-        });
-      }
-
-      var keys = Object.keys(obj);
-      var result = {};
-      keys.forEach(function (item) {
-        if (props.indexOf(item) === -1) {
-          result[item] = obj[item];
-        }
-      });
-      return result;
-    }
-    function createRandString() {
-      var number = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
-      return Array.from({
-        length: number
-      }).reduce(function (prev) {
-        return prev + Math.random().toString(36).substr(2);
-      }, '');
-    }
-
-    var portalsID = 'J__PORTALS__NODE__';
-    var getPortalsNode = function getPortalsNode(namespace) {
-      var id = portalsID + (namespace ? namespace.toLocaleUpperCase() : 'DEFAULT');
-      var portalsEl = document.getElementById(id);
-
-      if (!portalsEl) {
-        var el = document.createElement('div');
-        el.id = id;
-        portalsEl = document.body.appendChild(el);
-      }
-
-      return portalsEl;
-    };
-    function defer(fn) {
-      for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-        args[_key3 - 1] = arguments[_key3];
-      }
-
-      return setTimeout.apply(void 0, [fn, 1].concat(args));
-    }
-
-    function getGlobal() {
+    function getGlobal$1() {
       // eslint-disable-next-line no-restricted-globals
       if (typeof self !== 'undefined') {
         // eslint-disable-next-line no-restricted-globals
@@ -173,7 +122,7 @@
 
       throw new Error('unable to locate global object');
     }
-    var __GLOBAL__ = getGlobal();
+    var __GLOBAL__ = getGlobal$1();
 
     var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -3364,546 +3313,6 @@
         return memoFnRef.current;
     }
 
-    var strictUriEncode = str => encodeURIComponent(str).replace(/[!'()*]/g, x => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
-
-    var token = '%[a-f0-9]{2}';
-    var singleMatcher = new RegExp(token, 'gi');
-    var multiMatcher = new RegExp('(' + token + ')+', 'gi');
-
-    function decodeComponents(components, split) {
-    	try {
-    		// Try to decode the entire string first
-    		return decodeURIComponent(components.join(''));
-    	} catch (err) {
-    		// Do nothing
-    	}
-
-    	if (components.length === 1) {
-    		return components;
-    	}
-
-    	split = split || 1;
-
-    	// Split the array in 2 parts
-    	var left = components.slice(0, split);
-    	var right = components.slice(split);
-
-    	return Array.prototype.concat.call([], decodeComponents(left), decodeComponents(right));
-    }
-
-    function decode(input) {
-    	try {
-    		return decodeURIComponent(input);
-    	} catch (err) {
-    		var tokens = input.match(singleMatcher);
-
-    		for (var i = 1; i < tokens.length; i++) {
-    			input = decodeComponents(tokens, i).join('');
-
-    			tokens = input.match(singleMatcher);
-    		}
-
-    		return input;
-    	}
-    }
-
-    function customDecodeURIComponent(input) {
-    	// Keep track of all the replacements and prefill the map with the `BOM`
-    	var replaceMap = {
-    		'%FE%FF': '\uFFFD\uFFFD',
-    		'%FF%FE': '\uFFFD\uFFFD'
-    	};
-
-    	var match = multiMatcher.exec(input);
-    	while (match) {
-    		try {
-    			// Decode as big chunks as possible
-    			replaceMap[match[0]] = decodeURIComponent(match[0]);
-    		} catch (err) {
-    			var result = decode(match[0]);
-
-    			if (result !== match[0]) {
-    				replaceMap[match[0]] = result;
-    			}
-    		}
-
-    		match = multiMatcher.exec(input);
-    	}
-
-    	// Add `%C2` at the end of the map to make sure it does not replace the combinator before everything else
-    	replaceMap['%C2'] = '\uFFFD';
-
-    	var entries = Object.keys(replaceMap);
-
-    	for (var i = 0; i < entries.length; i++) {
-    		// Replace all decoded components
-    		var key = entries[i];
-    		input = input.replace(new RegExp(key, 'g'), replaceMap[key]);
-    	}
-
-    	return input;
-    }
-
-    var decodeUriComponent = function (encodedURI) {
-    	if (typeof encodedURI !== 'string') {
-    		throw new TypeError('Expected `encodedURI` to be of type `string`, got `' + typeof encodedURI + '`');
-    	}
-
-    	try {
-    		encodedURI = encodedURI.replace(/\+/g, ' ');
-
-    		// Try the built in decoder first
-    		return decodeURIComponent(encodedURI);
-    	} catch (err) {
-    		// Fallback to a more advanced decoder
-    		return customDecodeURIComponent(encodedURI);
-    	}
-    };
-
-    var splitOnFirst = (string, separator) => {
-    	if (!(typeof string === 'string' && typeof separator === 'string')) {
-    		throw new TypeError('Expected the arguments to be of type `string`');
-    	}
-
-    	if (separator === '') {
-    		return [string];
-    	}
-
-    	const separatorIndex = string.indexOf(separator);
-
-    	if (separatorIndex === -1) {
-    		return [string];
-    	}
-
-    	return [
-    		string.slice(0, separatorIndex),
-    		string.slice(separatorIndex + separator.length)
-    	];
-    };
-
-    var filterObj = function (obj, predicate) {
-    	var ret = {};
-    	var keys = Object.keys(obj);
-    	var isArr = Array.isArray(predicate);
-
-    	for (var i = 0; i < keys.length; i++) {
-    		var key = keys[i];
-    		var val = obj[key];
-
-    		if (isArr ? predicate.indexOf(key) !== -1 : predicate(key, val, obj)) {
-    			ret[key] = val;
-    		}
-    	}
-
-    	return ret;
-    };
-
-    createCommonjsModule(function (module, exports) {
-
-
-
-
-
-    const isNullOrUndefined = value => value === null || value === undefined;
-
-    function encoderForArrayFormat(options) {
-    	switch (options.arrayFormat) {
-    		case 'index':
-    			return key => (result, value) => {
-    				const index = result.length;
-
-    				if (
-    					value === undefined ||
-    					(options.skipNull && value === null) ||
-    					(options.skipEmptyString && value === '')
-    				) {
-    					return result;
-    				}
-
-    				if (value === null) {
-    					return [...result, [encode(key, options), '[', index, ']'].join('')];
-    				}
-
-    				return [
-    					...result,
-    					[encode(key, options), '[', encode(index, options), ']=', encode(value, options)].join('')
-    				];
-    			};
-
-    		case 'bracket':
-    			return key => (result, value) => {
-    				if (
-    					value === undefined ||
-    					(options.skipNull && value === null) ||
-    					(options.skipEmptyString && value === '')
-    				) {
-    					return result;
-    				}
-
-    				if (value === null) {
-    					return [...result, [encode(key, options), '[]'].join('')];
-    				}
-
-    				return [...result, [encode(key, options), '[]=', encode(value, options)].join('')];
-    			};
-
-    		case 'comma':
-    		case 'separator':
-    			return key => (result, value) => {
-    				if (value === null || value === undefined || value.length === 0) {
-    					return result;
-    				}
-
-    				if (result.length === 0) {
-    					return [[encode(key, options), '=', encode(value, options)].join('')];
-    				}
-
-    				return [[result, encode(value, options)].join(options.arrayFormatSeparator)];
-    			};
-
-    		default:
-    			return key => (result, value) => {
-    				if (
-    					value === undefined ||
-    					(options.skipNull && value === null) ||
-    					(options.skipEmptyString && value === '')
-    				) {
-    					return result;
-    				}
-
-    				if (value === null) {
-    					return [...result, encode(key, options)];
-    				}
-
-    				return [...result, [encode(key, options), '=', encode(value, options)].join('')];
-    			};
-    	}
-    }
-
-    function parserForArrayFormat(options) {
-    	let result;
-
-    	switch (options.arrayFormat) {
-    		case 'index':
-    			return (key, value, accumulator) => {
-    				result = /\[(\d*)\]$/.exec(key);
-
-    				key = key.replace(/\[\d*\]$/, '');
-
-    				if (!result) {
-    					accumulator[key] = value;
-    					return;
-    				}
-
-    				if (accumulator[key] === undefined) {
-    					accumulator[key] = {};
-    				}
-
-    				accumulator[key][result[1]] = value;
-    			};
-
-    		case 'bracket':
-    			return (key, value, accumulator) => {
-    				result = /(\[\])$/.exec(key);
-    				key = key.replace(/\[\]$/, '');
-
-    				if (!result) {
-    					accumulator[key] = value;
-    					return;
-    				}
-
-    				if (accumulator[key] === undefined) {
-    					accumulator[key] = [value];
-    					return;
-    				}
-
-    				accumulator[key] = [].concat(accumulator[key], value);
-    			};
-
-    		case 'comma':
-    		case 'separator':
-    			return (key, value, accumulator) => {
-    				const isArray = typeof value === 'string' && value.includes(options.arrayFormatSeparator);
-    				const isEncodedArray = (typeof value === 'string' && !isArray && decode(value, options).includes(options.arrayFormatSeparator));
-    				value = isEncodedArray ? decode(value, options) : value;
-    				const newValue = isArray || isEncodedArray ? value.split(options.arrayFormatSeparator).map(item => decode(item, options)) : value === null ? value : decode(value, options);
-    				accumulator[key] = newValue;
-    			};
-
-    		default:
-    			return (key, value, accumulator) => {
-    				if (accumulator[key] === undefined) {
-    					accumulator[key] = value;
-    					return;
-    				}
-
-    				accumulator[key] = [].concat(accumulator[key], value);
-    			};
-    	}
-    }
-
-    function validateArrayFormatSeparator(value) {
-    	if (typeof value !== 'string' || value.length !== 1) {
-    		throw new TypeError('arrayFormatSeparator must be single character string');
-    	}
-    }
-
-    function encode(value, options) {
-    	if (options.encode) {
-    		return options.strict ? strictUriEncode(value) : encodeURIComponent(value);
-    	}
-
-    	return value;
-    }
-
-    function decode(value, options) {
-    	if (options.decode) {
-    		return decodeUriComponent(value);
-    	}
-
-    	return value;
-    }
-
-    function keysSorter(input) {
-    	if (Array.isArray(input)) {
-    		return input.sort();
-    	}
-
-    	if (typeof input === 'object') {
-    		return keysSorter(Object.keys(input))
-    			.sort((a, b) => Number(a) - Number(b))
-    			.map(key => input[key]);
-    	}
-
-    	return input;
-    }
-
-    function removeHash(input) {
-    	const hashStart = input.indexOf('#');
-    	if (hashStart !== -1) {
-    		input = input.slice(0, hashStart);
-    	}
-
-    	return input;
-    }
-
-    function getHash(url) {
-    	let hash = '';
-    	const hashStart = url.indexOf('#');
-    	if (hashStart !== -1) {
-    		hash = url.slice(hashStart);
-    	}
-
-    	return hash;
-    }
-
-    function extract(input) {
-    	input = removeHash(input);
-    	const queryStart = input.indexOf('?');
-    	if (queryStart === -1) {
-    		return '';
-    	}
-
-    	return input.slice(queryStart + 1);
-    }
-
-    function parseValue(value, options) {
-    	if (options.parseNumbers && !Number.isNaN(Number(value)) && (typeof value === 'string' && value.trim() !== '')) {
-    		value = Number(value);
-    	} else if (options.parseBooleans && value !== null && (value.toLowerCase() === 'true' || value.toLowerCase() === 'false')) {
-    		value = value.toLowerCase() === 'true';
-    	}
-
-    	return value;
-    }
-
-    function parse(query, options) {
-    	options = Object.assign({
-    		decode: true,
-    		sort: true,
-    		arrayFormat: 'none',
-    		arrayFormatSeparator: ',',
-    		parseNumbers: false,
-    		parseBooleans: false
-    	}, options);
-
-    	validateArrayFormatSeparator(options.arrayFormatSeparator);
-
-    	const formatter = parserForArrayFormat(options);
-
-    	// Create an object with no prototype
-    	const ret = Object.create(null);
-
-    	if (typeof query !== 'string') {
-    		return ret;
-    	}
-
-    	query = query.trim().replace(/^[?#&]/, '');
-
-    	if (!query) {
-    		return ret;
-    	}
-
-    	for (const param of query.split('&')) {
-    		if (param === '') {
-    			continue;
-    		}
-
-    		let [key, value] = splitOnFirst(options.decode ? param.replace(/\+/g, ' ') : param, '=');
-
-    		// Missing `=` should be `null`:
-    		// http://w3.org/TR/2012/WD-url-20120524/#collect-url-parameters
-    		value = value === undefined ? null : ['comma', 'separator'].includes(options.arrayFormat) ? value : decode(value, options);
-    		formatter(decode(key, options), value, ret);
-    	}
-
-    	for (const key of Object.keys(ret)) {
-    		const value = ret[key];
-    		if (typeof value === 'object' && value !== null) {
-    			for (const k of Object.keys(value)) {
-    				value[k] = parseValue(value[k], options);
-    			}
-    		} else {
-    			ret[key] = parseValue(value, options);
-    		}
-    	}
-
-    	if (options.sort === false) {
-    		return ret;
-    	}
-
-    	return (options.sort === true ? Object.keys(ret).sort() : Object.keys(ret).sort(options.sort)).reduce((result, key) => {
-    		const value = ret[key];
-    		if (Boolean(value) && typeof value === 'object' && !Array.isArray(value)) {
-    			// Sort object keys, not values
-    			result[key] = keysSorter(value);
-    		} else {
-    			result[key] = value;
-    		}
-
-    		return result;
-    	}, Object.create(null));
-    }
-
-    exports.extract = extract;
-    exports.parse = parse;
-
-    exports.stringify = (object, options) => {
-    	if (!object) {
-    		return '';
-    	}
-
-    	options = Object.assign({
-    		encode: true,
-    		strict: true,
-    		arrayFormat: 'none',
-    		arrayFormatSeparator: ','
-    	}, options);
-
-    	validateArrayFormatSeparator(options.arrayFormatSeparator);
-
-    	const shouldFilter = key => (
-    		(options.skipNull && isNullOrUndefined(object[key])) ||
-    		(options.skipEmptyString && object[key] === '')
-    	);
-
-    	const formatter = encoderForArrayFormat(options);
-
-    	const objectCopy = {};
-
-    	for (const key of Object.keys(object)) {
-    		if (!shouldFilter(key)) {
-    			objectCopy[key] = object[key];
-    		}
-    	}
-
-    	const keys = Object.keys(objectCopy);
-
-    	if (options.sort !== false) {
-    		keys.sort(options.sort);
-    	}
-
-    	return keys.map(key => {
-    		const value = object[key];
-
-    		if (value === undefined) {
-    			return '';
-    		}
-
-    		if (value === null) {
-    			return encode(key, options);
-    		}
-
-    		if (Array.isArray(value)) {
-    			return value
-    				.reduce(formatter(key), [])
-    				.join('&');
-    		}
-
-    		return encode(key, options) + '=' + encode(value, options);
-    	}).filter(x => x.length > 0).join('&');
-    };
-
-    exports.parseUrl = (url, options) => {
-    	options = Object.assign({
-    		decode: true
-    	}, options);
-
-    	const [url_, hash] = splitOnFirst(url, '#');
-
-    	return Object.assign(
-    		{
-    			url: url_.split('?')[0] || '',
-    			query: parse(extract(url), options)
-    		},
-    		options && options.parseFragmentIdentifier && hash ? {fragmentIdentifier: decode(hash, options)} : {}
-    	);
-    };
-
-    exports.stringifyUrl = (object, options) => {
-    	options = Object.assign({
-    		encode: true,
-    		strict: true
-    	}, options);
-
-    	const url = removeHash(object.url).split('?')[0] || '';
-    	const queryFromUrl = exports.extract(object.url);
-    	const parsedQueryFromUrl = exports.parse(queryFromUrl, {sort: false});
-
-    	const query = Object.assign(parsedQueryFromUrl, object.query);
-    	let queryString = exports.stringify(query, options);
-    	if (queryString) {
-    		queryString = `?${queryString}`;
-    	}
-
-    	let hash = getHash(object.url);
-    	if (object.fragmentIdentifier) {
-    		hash = `#${encode(object.fragmentIdentifier, options)}`;
-    	}
-
-    	return `${url}${queryString}${hash}`;
-    };
-
-    exports.pick = (input, filter, options) => {
-    	options = Object.assign({
-    		parseFragmentIdentifier: true
-    	}, options);
-
-    	const {url, query, fragmentIdentifier} = exports.parseUrl(input, options);
-    	return exports.stringifyUrl({
-    		url,
-    		query: filterObj(query, filter),
-    		fragmentIdentifier
-    	}, options);
-    };
-
-    exports.exclude = (input, filter, options) => {
-    	const exclusionFilter = Array.isArray(filter) ? key => !filter.includes(key) : (key, value) => !filter(key, value);
-
-    	return exports.pick(input, exclusionFilter, options);
-    };
-    });
-
     var BASE_KEY = 'USE_STORAGE_CACHE';
     var storagMethod = {
         local: __GLOBAL__.localStorage,
@@ -5149,49 +4558,62 @@
         : [];
     });
 
-    var useLayoutEffect = typeof window !== 'undefined' &&
-        window.document &&
-        window.document.createElement
-        ? React__namespace.useLayoutEffect
-        : React__namespace.useEffect;
-
     let updateQueue = makeQueue();
-    const raf = (fn) => schedule(fn, updateQueue);
+    const raf = fn => schedule(fn, updateQueue);
     let writeQueue = makeQueue();
-    raf.write = (fn) => schedule(fn, writeQueue);
+
+    raf.write = fn => schedule(fn, writeQueue);
+
     let onStartQueue = makeQueue();
-    raf.onStart = (fn) => schedule(fn, onStartQueue);
+
+    raf.onStart = fn => schedule(fn, onStartQueue);
+
     let onFrameQueue = makeQueue();
-    raf.onFrame = (fn) => schedule(fn, onFrameQueue);
+
+    raf.onFrame = fn => schedule(fn, onFrameQueue);
+
     let onFinishQueue = makeQueue();
-    raf.onFinish = (fn) => schedule(fn, onFinishQueue);
+
+    raf.onFinish = fn => schedule(fn, onFinishQueue);
+
     let timeouts = [];
+
     raf.setTimeout = (handler, ms) => {
       let time = raf.now() + ms;
+
       let cancel = () => {
-        let i = timeouts.findIndex((t) => t.cancel == cancel);
-        if (~i)
-          timeouts.splice(i, 1);
+        let i = timeouts.findIndex(t => t.cancel == cancel);
+        if (~i) timeouts.splice(i, 1);
         __raf.count -= ~i ? 1 : 0;
       };
-      let timeout = {time, handler, cancel};
+
+      let timeout = {
+        time,
+        handler,
+        cancel
+      };
       timeouts.splice(findTimeout(time), 0, timeout);
       __raf.count += 1;
       start();
       return timeout;
     };
-    let findTimeout = (time) => ~(~timeouts.findIndex((t) => t.time > time) || ~timeouts.length);
-    raf.cancel = (fn) => {
+
+    let findTimeout = time => ~(~timeouts.findIndex(t => t.time > time) || ~timeouts.length);
+
+    raf.cancel = fn => {
       updateQueue.delete(fn);
       writeQueue.delete(fn);
     };
-    raf.sync = (fn) => {
+
+    raf.sync = fn => {
       sync = true;
       raf.batchedUpdates(fn);
       sync = false;
     };
-    raf.throttle = (fn) => {
+
+    raf.throttle = fn => {
       let lastArgs;
+
       function queuedFn() {
         try {
           fn(...lastArgs);
@@ -5199,25 +4621,44 @@
           lastArgs = null;
         }
       }
+
       function throttled(...args) {
         lastArgs = args;
         raf.onStart(queuedFn);
       }
+
       throttled.handler = fn;
+
       throttled.cancel = () => {
         onStartQueue.delete(queuedFn);
         lastArgs = null;
       };
+
       return throttled;
     };
-    let nativeRaf = typeof window != "undefined" ? window.requestAnimationFrame : () => {
-    };
-    raf.use = (impl) => nativeRaf = impl;
-    raf.now = typeof performance != "undefined" ? () => performance.now() : Date.now;
-    raf.batchedUpdates = (fn) => fn();
+
+    let nativeRaf = typeof window != 'undefined' ? window.requestAnimationFrame : () => {};
+
+    raf.use = impl => nativeRaf = impl;
+
+    raf.now = typeof performance != 'undefined' ? () => performance.now() : Date.now;
+
+    raf.batchedUpdates = fn => fn();
+
     raf.catch = console.error;
+    raf.frameLoop = 'always';
+
+    raf.advance = () => {
+      if (raf.frameLoop !== 'demand') {
+        console.warn('Cannot call the manual advancement of rafz whilst frameLoop is not set as demand');
+      } else {
+        update();
+      }
+    };
+
     let ts = -1;
     let sync = false;
+
     function schedule(fn, queue) {
       if (sync) {
         queue.delete(fn);
@@ -5227,32 +4668,41 @@
         start();
       }
     }
+
     function start() {
       if (ts < 0) {
         ts = 0;
-        nativeRaf(loop);
+
+        if (raf.frameLoop !== 'demand') {
+          nativeRaf(loop);
+        }
       }
     }
+
     function loop() {
       if (~ts) {
         nativeRaf(loop);
         raf.batchedUpdates(update);
       }
     }
+
     function update() {
       let prevTs = ts;
       ts = raf.now();
       let count = findTimeout(ts);
+
       if (count) {
-        eachSafely(timeouts.splice(0, count), (t) => t.handler());
+        eachSafely(timeouts.splice(0, count), t => t.handler());
         __raf.count -= count;
       }
+
       onStartQueue.flush();
       updateQueue.flush(prevTs ? Math.min(64, ts - prevTs) : 16.667);
       onFrameQueue.flush();
       writeQueue.flush();
       onFinishQueue.flush();
     }
+
     function makeQueue() {
       let next = new Set();
       let current = next;
@@ -5261,23 +4711,27 @@
           __raf.count += current == next && !next.has(fn) ? 1 : 0;
           next.add(fn);
         },
+
         delete(fn) {
           __raf.count -= current == next && next.has(fn) ? 1 : 0;
           return next.delete(fn);
         },
+
         flush(arg) {
           if (current.size) {
             next = new Set();
             __raf.count -= current.size;
-            eachSafely(current, (fn) => fn(arg) && next.add(fn));
+            eachSafely(current, fn => fn(arg) && next.add(fn));
             __raf.count += next.size;
             current = next;
           }
         }
+
       };
     }
+
     function eachSafely(values, each) {
-      values.forEach((value) => {
+      values.forEach(value => {
         try {
           each(value);
         } catch (e) {
@@ -5285,8 +4739,10 @@
         }
       });
     }
+
     const __raf = {
       count: 0,
+
       clear() {
         ts = -1;
         timeouts = [];
@@ -5297,150 +4753,76 @@
         onFinishQueue = makeQueue();
         __raf.count = 0;
       }
+
     };
 
-    var $get = Symbol.for('FluidValue.get');
-    var $observers = Symbol.for('FluidValue.observers');
-    /** Returns true if `arg` can be observed. */
-    var hasFluidValue = function (arg) { return Boolean(arg && arg[$get]); };
-    /**
-     * Get the current value.
-     * If `arg` is not observable, `arg` is returned.
-     */
-    var getFluidValue = function (arg) {
-        return arg && arg[$get] ? arg[$get]() : arg;
-    };
-    function callFluidObserver(observer, event) {
-        if (observer.eventObserved) {
-            observer.eventObserved(event);
-        }
-        else {
-            observer(event);
-        }
-    }
-    function callFluidObservers(target, event) {
-        var observers = target[$observers];
-        if (observers) {
-            observers.forEach(function (observer) {
-                callFluidObserver(observer, event);
-            });
-        }
-    }
-    /**
-     * Extend this class for automatic TypeScript support when passing this
-     * value to `fluids`-compatible libraries.
-     */
-    var FluidValue = /** @class */ (function () {
-        function FluidValue(get) {
-            if (!get && !(get = this.get)) {
-                throw Error('Unknown getter');
-            }
-            setFluidGetter(this, get);
-        }
-        return FluidValue;
-    }());
-    /** Define the getter called by `getFluidValue`. */
-    var setFluidGetter = function (target, get) {
-        return setHidden(target, $get, get);
-    };
-    function addFluidObserver(target, observer) {
-        if (target[$get]) {
-            var observers = target[$observers];
-            if (!observers) {
-                setHidden(target, $observers, (observers = new Set()));
-            }
-            if (!observers.has(observer)) {
-                observers.add(observer);
-                if (target.observerAdded) {
-                    target.observerAdded(observers.size, observer);
-                }
-            }
-        }
-        return observer;
-    }
-    function removeFluidObserver(target, observer) {
-        var observers = target[$observers];
-        if (observers && observers.has(observer)) {
-            var count = observers.size - 1;
-            if (count) {
-                observers.delete(observer);
-            }
-            else {
-                setHidden(target, $observers, null);
-            }
-            if (target.observerRemoved) {
-                target.observerRemoved(count, observer);
-            }
-        }
-    }
-    var setHidden = function (target, key, value) {
-        return Object.defineProperty(target, key, {
-            value: value,
-            writable: true,
-            configurable: true,
-        });
-    };
-
-    function noop() {
-    }
-    const defineHidden = (obj, key, value) => Object.defineProperty(obj, key, {value, writable: true, configurable: true});
+    function noop() {}
+    const defineHidden = (obj, key, value) => Object.defineProperty(obj, key, {
+      value,
+      writable: true,
+      configurable: true
+    });
     const is = {
       arr: Array.isArray,
-      obj: (a) => !!a && a.constructor.name === "Object",
-      fun: (a) => typeof a === "function",
-      str: (a) => typeof a === "string",
-      num: (a) => typeof a === "number",
-      und: (a) => a === void 0
+      obj: a => !!a && a.constructor.name === 'Object',
+      fun: a => typeof a === 'function',
+      str: a => typeof a === 'string',
+      num: a => typeof a === 'number',
+      und: a => a === undefined
     };
     function isEqual(a, b) {
       if (is.arr(a)) {
-        if (!is.arr(b) || a.length !== b.length)
-          return false;
+        if (!is.arr(b) || a.length !== b.length) return false;
+
         for (let i = 0; i < a.length; i++) {
-          if (a[i] !== b[i])
-            return false;
+          if (a[i] !== b[i]) return false;
         }
+
         return true;
       }
+
       return a === b;
     }
     const each = (obj, fn) => obj.forEach(fn);
     function eachProp(obj, fn, ctx) {
+      if (is.arr(obj)) {
+        for (let i = 0; i < obj.length; i++) {
+          fn.call(ctx, obj[i], `${i}`);
+        }
+
+        return;
+      }
+
       for (const key in obj) {
-        fn.call(ctx, obj[key], key);
+        if (obj.hasOwnProperty(key)) {
+          fn.call(ctx, obj[key], key);
+        }
       }
     }
-    const toArray = (a) => is.und(a) ? [] : is.arr(a) ? a : [a];
+    const toArray = a => is.und(a) ? [] : is.arr(a) ? a : [a];
 
-    let createStringInterpolator;
+    let createStringInterpolator$1;
     let to;
-    let colors = null;
+    let colors$1 = null;
     let skipAnimation = false;
     let willAdvance = noop;
-    const assign = (globals) => {
-      if (globals.to)
-        to = globals.to;
-      if (globals.now)
-        raf.now = globals.now;
-      if (globals.colors !== void 0)
-        colors = globals.colors;
-      if (globals.skipAnimation != null)
-        skipAnimation = globals.skipAnimation;
-      if (globals.createStringInterpolator)
-        createStringInterpolator = globals.createStringInterpolator;
-      if (globals.requestAnimationFrame)
-        raf.use(globals.requestAnimationFrame);
-      if (globals.batchedUpdates)
-        raf.batchedUpdates = globals.batchedUpdates;
-      if (globals.willAdvance)
-        willAdvance = globals.willAdvance;
+    const assign = globals => {
+      if (globals.to) to = globals.to;
+      if (globals.now) raf.now = globals.now;
+      if (globals.colors !== undefined) colors$1 = globals.colors;
+      if (globals.skipAnimation != null) skipAnimation = globals.skipAnimation;
+      if (globals.createStringInterpolator) createStringInterpolator$1 = globals.createStringInterpolator;
+      if (globals.requestAnimationFrame) raf.use(globals.requestAnimationFrame);
+      if (globals.batchedUpdates) raf.batchedUpdates = globals.batchedUpdates;
+      if (globals.willAdvance) willAdvance = globals.willAdvance;
+      if (globals.frameLoop) raf.frameLoop = globals.frameLoop;
     };
 
     var globals = /*#__PURE__*/Object.freeze({
       __proto__: null,
-      get createStringInterpolator () { return createStringInterpolator; },
+      get createStringInterpolator () { return createStringInterpolator$1; },
       get to () { return to; },
-      get colors () { return colors; },
+      get colors () { return colors$1; },
       get skipAnimation () { return skipAnimation; },
       get willAdvance () { return willAdvance; },
       assign: assign
@@ -5454,6 +4836,7 @@
       get idle() {
         return !startQueue.size && !currentFrame.length;
       },
+
       start(animation) {
         if (priority > animation.priority) {
           startQueue.add(animation);
@@ -5463,221 +4846,236 @@
           raf(advance);
         }
       },
+
       advance,
+
       sort(animation) {
         if (priority) {
           raf.onFrame(() => frameLoop.sort(animation));
         } else {
           const prevIndex = currentFrame.indexOf(animation);
+
           if (~prevIndex) {
             currentFrame.splice(prevIndex, 1);
             startUnsafely(animation);
           }
         }
       },
+
       clear() {
         currentFrame = [];
         startQueue.clear();
       }
+
     };
+
     function flushStartQueue() {
       startQueue.forEach(startSafely);
       startQueue.clear();
       raf(advance);
     }
+
     function startSafely(animation) {
-      if (!currentFrame.includes(animation))
-        startUnsafely(animation);
+      if (!currentFrame.includes(animation)) startUnsafely(animation);
     }
+
     function startUnsafely(animation) {
-      currentFrame.splice(findIndex(currentFrame, (other) => other.priority > animation.priority), 0, animation);
+      currentFrame.splice(findIndex(currentFrame, other => other.priority > animation.priority), 0, animation);
     }
+
     function advance(dt) {
       const nextFrame = prevFrame;
+
       for (let i = 0; i < currentFrame.length; i++) {
         const animation = currentFrame[i];
         priority = animation.priority;
+
         if (!animation.idle) {
           willAdvance(animation);
           animation.advance(dt);
+
           if (!animation.idle) {
             nextFrame.push(animation);
           }
         }
       }
+
       priority = 0;
       prevFrame = currentFrame;
       prevFrame.length = 0;
       currentFrame = nextFrame;
       return currentFrame.length > 0;
     }
+
     function findIndex(arr, test) {
       const index = arr.findIndex(test);
       return index < 0 ? arr.length : index;
     }
 
-    const colors$1 = {
-      transparent: 0,
-      aliceblue: 4042850303,
-      antiquewhite: 4209760255,
-      aqua: 16777215,
-      aquamarine: 2147472639,
-      azure: 4043309055,
-      beige: 4126530815,
-      bisque: 4293182719,
-      black: 255,
-      blanchedalmond: 4293643775,
-      blue: 65535,
-      blueviolet: 2318131967,
-      brown: 2771004159,
-      burlywood: 3736635391,
-      burntsienna: 3934150143,
-      cadetblue: 1604231423,
-      chartreuse: 2147418367,
-      chocolate: 3530104575,
-      coral: 4286533887,
-      cornflowerblue: 1687547391,
-      cornsilk: 4294499583,
-      crimson: 3692313855,
-      cyan: 16777215,
-      darkblue: 35839,
-      darkcyan: 9145343,
-      darkgoldenrod: 3095792639,
-      darkgray: 2846468607,
-      darkgreen: 6553855,
-      darkgrey: 2846468607,
-      darkkhaki: 3182914559,
-      darkmagenta: 2332068863,
-      darkolivegreen: 1433087999,
-      darkorange: 4287365375,
-      darkorchid: 2570243327,
-      darkred: 2332033279,
-      darksalmon: 3918953215,
-      darkseagreen: 2411499519,
-      darkslateblue: 1211993087,
-      darkslategray: 793726975,
-      darkslategrey: 793726975,
-      darkturquoise: 13554175,
-      darkviolet: 2483082239,
-      deeppink: 4279538687,
-      deepskyblue: 12582911,
-      dimgray: 1768516095,
-      dimgrey: 1768516095,
-      dodgerblue: 512819199,
-      firebrick: 2988581631,
-      floralwhite: 4294635775,
-      forestgreen: 579543807,
-      fuchsia: 4278255615,
-      gainsboro: 3705462015,
-      ghostwhite: 4177068031,
-      gold: 4292280575,
-      goldenrod: 3668254975,
-      gray: 2155905279,
-      green: 8388863,
-      greenyellow: 2919182335,
-      grey: 2155905279,
-      honeydew: 4043305215,
-      hotpink: 4285117695,
-      indianred: 3445382399,
-      indigo: 1258324735,
-      ivory: 4294963455,
-      khaki: 4041641215,
-      lavender: 3873897215,
-      lavenderblush: 4293981695,
-      lawngreen: 2096890111,
-      lemonchiffon: 4294626815,
-      lightblue: 2916673279,
-      lightcoral: 4034953471,
-      lightcyan: 3774873599,
-      lightgoldenrodyellow: 4210742015,
-      lightgray: 3553874943,
-      lightgreen: 2431553791,
-      lightgrey: 3553874943,
-      lightpink: 4290167295,
-      lightsalmon: 4288707327,
-      lightseagreen: 548580095,
-      lightskyblue: 2278488831,
-      lightslategray: 2005441023,
-      lightslategrey: 2005441023,
-      lightsteelblue: 2965692159,
-      lightyellow: 4294959359,
-      lime: 16711935,
-      limegreen: 852308735,
-      linen: 4210091775,
-      magenta: 4278255615,
-      maroon: 2147483903,
-      mediumaquamarine: 1724754687,
-      mediumblue: 52735,
-      mediumorchid: 3126187007,
-      mediumpurple: 2473647103,
-      mediumseagreen: 1018393087,
-      mediumslateblue: 2070474495,
-      mediumspringgreen: 16423679,
-      mediumturquoise: 1221709055,
-      mediumvioletred: 3340076543,
-      midnightblue: 421097727,
-      mintcream: 4127193855,
-      mistyrose: 4293190143,
-      moccasin: 4293178879,
-      navajowhite: 4292783615,
-      navy: 33023,
-      oldlace: 4260751103,
-      olive: 2155872511,
-      olivedrab: 1804477439,
-      orange: 4289003775,
-      orangered: 4282712319,
-      orchid: 3664828159,
-      palegoldenrod: 4008225535,
-      palegreen: 2566625535,
-      paleturquoise: 2951671551,
-      palevioletred: 3681588223,
-      papayawhip: 4293907967,
-      peachpuff: 4292524543,
-      peru: 3448061951,
-      pink: 4290825215,
-      plum: 3718307327,
-      powderblue: 2967529215,
-      purple: 2147516671,
-      rebeccapurple: 1714657791,
-      red: 4278190335,
-      rosybrown: 3163525119,
-      royalblue: 1097458175,
-      saddlebrown: 2336560127,
-      salmon: 4202722047,
-      sandybrown: 4104413439,
-      seagreen: 780883967,
-      seashell: 4294307583,
-      sienna: 2689740287,
-      silver: 3233857791,
-      skyblue: 2278484991,
-      slateblue: 1784335871,
-      slategray: 1887473919,
-      slategrey: 1887473919,
-      snow: 4294638335,
-      springgreen: 16744447,
-      steelblue: 1182971135,
-      tan: 3535047935,
-      teal: 8421631,
-      thistle: 3636451583,
-      tomato: 4284696575,
-      turquoise: 1088475391,
-      violet: 4001558271,
-      wheat: 4125012991,
-      white: 4294967295,
-      whitesmoke: 4126537215,
-      yellow: 4294902015,
-      yellowgreen: 2597139199
+    const colors = {
+      transparent: 0x00000000,
+      aliceblue: 0xf0f8ffff,
+      antiquewhite: 0xfaebd7ff,
+      aqua: 0x00ffffff,
+      aquamarine: 0x7fffd4ff,
+      azure: 0xf0ffffff,
+      beige: 0xf5f5dcff,
+      bisque: 0xffe4c4ff,
+      black: 0x000000ff,
+      blanchedalmond: 0xffebcdff,
+      blue: 0x0000ffff,
+      blueviolet: 0x8a2be2ff,
+      brown: 0xa52a2aff,
+      burlywood: 0xdeb887ff,
+      burntsienna: 0xea7e5dff,
+      cadetblue: 0x5f9ea0ff,
+      chartreuse: 0x7fff00ff,
+      chocolate: 0xd2691eff,
+      coral: 0xff7f50ff,
+      cornflowerblue: 0x6495edff,
+      cornsilk: 0xfff8dcff,
+      crimson: 0xdc143cff,
+      cyan: 0x00ffffff,
+      darkblue: 0x00008bff,
+      darkcyan: 0x008b8bff,
+      darkgoldenrod: 0xb8860bff,
+      darkgray: 0xa9a9a9ff,
+      darkgreen: 0x006400ff,
+      darkgrey: 0xa9a9a9ff,
+      darkkhaki: 0xbdb76bff,
+      darkmagenta: 0x8b008bff,
+      darkolivegreen: 0x556b2fff,
+      darkorange: 0xff8c00ff,
+      darkorchid: 0x9932ccff,
+      darkred: 0x8b0000ff,
+      darksalmon: 0xe9967aff,
+      darkseagreen: 0x8fbc8fff,
+      darkslateblue: 0x483d8bff,
+      darkslategray: 0x2f4f4fff,
+      darkslategrey: 0x2f4f4fff,
+      darkturquoise: 0x00ced1ff,
+      darkviolet: 0x9400d3ff,
+      deeppink: 0xff1493ff,
+      deepskyblue: 0x00bfffff,
+      dimgray: 0x696969ff,
+      dimgrey: 0x696969ff,
+      dodgerblue: 0x1e90ffff,
+      firebrick: 0xb22222ff,
+      floralwhite: 0xfffaf0ff,
+      forestgreen: 0x228b22ff,
+      fuchsia: 0xff00ffff,
+      gainsboro: 0xdcdcdcff,
+      ghostwhite: 0xf8f8ffff,
+      gold: 0xffd700ff,
+      goldenrod: 0xdaa520ff,
+      gray: 0x808080ff,
+      green: 0x008000ff,
+      greenyellow: 0xadff2fff,
+      grey: 0x808080ff,
+      honeydew: 0xf0fff0ff,
+      hotpink: 0xff69b4ff,
+      indianred: 0xcd5c5cff,
+      indigo: 0x4b0082ff,
+      ivory: 0xfffff0ff,
+      khaki: 0xf0e68cff,
+      lavender: 0xe6e6faff,
+      lavenderblush: 0xfff0f5ff,
+      lawngreen: 0x7cfc00ff,
+      lemonchiffon: 0xfffacdff,
+      lightblue: 0xadd8e6ff,
+      lightcoral: 0xf08080ff,
+      lightcyan: 0xe0ffffff,
+      lightgoldenrodyellow: 0xfafad2ff,
+      lightgray: 0xd3d3d3ff,
+      lightgreen: 0x90ee90ff,
+      lightgrey: 0xd3d3d3ff,
+      lightpink: 0xffb6c1ff,
+      lightsalmon: 0xffa07aff,
+      lightseagreen: 0x20b2aaff,
+      lightskyblue: 0x87cefaff,
+      lightslategray: 0x778899ff,
+      lightslategrey: 0x778899ff,
+      lightsteelblue: 0xb0c4deff,
+      lightyellow: 0xffffe0ff,
+      lime: 0x00ff00ff,
+      limegreen: 0x32cd32ff,
+      linen: 0xfaf0e6ff,
+      magenta: 0xff00ffff,
+      maroon: 0x800000ff,
+      mediumaquamarine: 0x66cdaaff,
+      mediumblue: 0x0000cdff,
+      mediumorchid: 0xba55d3ff,
+      mediumpurple: 0x9370dbff,
+      mediumseagreen: 0x3cb371ff,
+      mediumslateblue: 0x7b68eeff,
+      mediumspringgreen: 0x00fa9aff,
+      mediumturquoise: 0x48d1ccff,
+      mediumvioletred: 0xc71585ff,
+      midnightblue: 0x191970ff,
+      mintcream: 0xf5fffaff,
+      mistyrose: 0xffe4e1ff,
+      moccasin: 0xffe4b5ff,
+      navajowhite: 0xffdeadff,
+      navy: 0x000080ff,
+      oldlace: 0xfdf5e6ff,
+      olive: 0x808000ff,
+      olivedrab: 0x6b8e23ff,
+      orange: 0xffa500ff,
+      orangered: 0xff4500ff,
+      orchid: 0xda70d6ff,
+      palegoldenrod: 0xeee8aaff,
+      palegreen: 0x98fb98ff,
+      paleturquoise: 0xafeeeeff,
+      palevioletred: 0xdb7093ff,
+      papayawhip: 0xffefd5ff,
+      peachpuff: 0xffdab9ff,
+      peru: 0xcd853fff,
+      pink: 0xffc0cbff,
+      plum: 0xdda0ddff,
+      powderblue: 0xb0e0e6ff,
+      purple: 0x800080ff,
+      rebeccapurple: 0x663399ff,
+      red: 0xff0000ff,
+      rosybrown: 0xbc8f8fff,
+      royalblue: 0x4169e1ff,
+      saddlebrown: 0x8b4513ff,
+      salmon: 0xfa8072ff,
+      sandybrown: 0xf4a460ff,
+      seagreen: 0x2e8b57ff,
+      seashell: 0xfff5eeff,
+      sienna: 0xa0522dff,
+      silver: 0xc0c0c0ff,
+      skyblue: 0x87ceebff,
+      slateblue: 0x6a5acdff,
+      slategray: 0x708090ff,
+      slategrey: 0x708090ff,
+      snow: 0xfffafaff,
+      springgreen: 0x00ff7fff,
+      steelblue: 0x4682b4ff,
+      tan: 0xd2b48cff,
+      teal: 0x008080ff,
+      thistle: 0xd8bfd8ff,
+      tomato: 0xff6347ff,
+      turquoise: 0x40e0d0ff,
+      violet: 0xee82eeff,
+      wheat: 0xf5deb3ff,
+      white: 0xffffffff,
+      whitesmoke: 0xf5f5f5ff,
+      yellow: 0xffff00ff,
+      yellowgreen: 0x9acd32ff
     };
 
-    const NUMBER = "[-+]?\\d*\\.?\\d+";
-    const PERCENTAGE = NUMBER + "%";
+    const NUMBER = '[-+]?\\d*\\.?\\d+';
+    const PERCENTAGE = NUMBER + '%';
+
     function call(...parts) {
-      return "\\(\\s*(" + parts.join(")\\s*,\\s*(") + ")\\s*\\)";
+      return '\\(\\s*(' + parts.join(')\\s*,\\s*(') + ')\\s*\\)';
     }
-    const rgb = new RegExp("rgb" + call(NUMBER, NUMBER, NUMBER));
-    const rgba = new RegExp("rgba" + call(NUMBER, NUMBER, NUMBER, NUMBER));
-    const hsl = new RegExp("hsl" + call(NUMBER, PERCENTAGE, PERCENTAGE));
-    const hsla = new RegExp("hsla" + call(NUMBER, PERCENTAGE, PERCENTAGE, NUMBER));
+
+    const rgb = new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER));
+    const rgba = new RegExp('rgba' + call(NUMBER, NUMBER, NUMBER, NUMBER));
+    const hsl = new RegExp('hsl' + call(NUMBER, PERCENTAGE, PERCENTAGE));
+    const hsla = new RegExp('hsla' + call(NUMBER, PERCENTAGE, PERCENTAGE, NUMBER));
     const hex3 = /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/;
     const hex4 = /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/;
     const hex6 = /^#([0-9a-fA-F]{6})$/;
@@ -5685,49 +5083,55 @@
 
     function normalizeColor(color) {
       let match;
-      if (typeof color === "number") {
-        return color >>> 0 === color && color >= 0 && color <= 4294967295 ? color : null;
+
+      if (typeof color === 'number') {
+        return color >>> 0 === color && color >= 0 && color <= 0xffffffff ? color : null;
       }
-      if (match = hex6.exec(color))
-        return parseInt(match[1] + "ff", 16) >>> 0;
-      if (colors && colors[color] !== void 0) {
-        return colors[color];
+
+      if (match = hex6.exec(color)) return parseInt(match[1] + 'ff', 16) >>> 0;
+
+      if (colors$1 && colors$1[color] !== undefined) {
+        return colors$1[color];
       }
+
       if (match = rgb.exec(color)) {
-        return (parse255(match[1]) << 24 | parse255(match[2]) << 16 | parse255(match[3]) << 8 | 255) >>> 0;
+        return (parse255(match[1]) << 24 | parse255(match[2]) << 16 | parse255(match[3]) << 8 | 0x000000ff) >>> 0;
       }
+
       if (match = rgba.exec(color)) {
         return (parse255(match[1]) << 24 | parse255(match[2]) << 16 | parse255(match[3]) << 8 | parse1(match[4])) >>> 0;
       }
+
       if (match = hex3.exec(color)) {
-        return parseInt(match[1] + match[1] + match[2] + match[2] + match[3] + match[3] + "ff", 16) >>> 0;
+        return parseInt(match[1] + match[1] + match[2] + match[2] + match[3] + match[3] + 'ff', 16) >>> 0;
       }
-      if (match = hex8.exec(color))
-        return parseInt(match[1], 16) >>> 0;
+
+      if (match = hex8.exec(color)) return parseInt(match[1], 16) >>> 0;
+
       if (match = hex4.exec(color)) {
         return parseInt(match[1] + match[1] + match[2] + match[2] + match[3] + match[3] + match[4] + match[4], 16) >>> 0;
       }
+
       if (match = hsl.exec(color)) {
-        return (hslToRgb(parse360(match[1]), parsePercentage(match[2]), parsePercentage(match[3])) | 255) >>> 0;
+        return (hslToRgb(parse360(match[1]), parsePercentage(match[2]), parsePercentage(match[3])) | 0x000000ff) >>> 0;
       }
+
       if (match = hsla.exec(color)) {
         return (hslToRgb(parse360(match[1]), parsePercentage(match[2]), parsePercentage(match[3])) | parse1(match[4])) >>> 0;
       }
+
       return null;
     }
+
     function hue2rgb(p, q, t) {
-      if (t < 0)
-        t += 1;
-      if (t > 1)
-        t -= 1;
-      if (t < 1 / 6)
-        return p + (q - p) * 6 * t;
-      if (t < 1 / 2)
-        return q;
-      if (t < 2 / 3)
-        return p + (q - p) * (2 / 3 - t) * 6;
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
       return p;
     }
+
     function hslToRgb(h, s, l) {
       const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
       const p = 2 * l - q;
@@ -5736,44 +5140,41 @@
       const b = hue2rgb(p, q, h - 1 / 3);
       return Math.round(r * 255) << 24 | Math.round(g * 255) << 16 | Math.round(b * 255) << 8;
     }
+
     function parse255(str) {
       const int = parseInt(str, 10);
-      if (int < 0)
-        return 0;
-      if (int > 255)
-        return 255;
+      if (int < 0) return 0;
+      if (int > 255) return 255;
       return int;
     }
+
     function parse360(str) {
       const int = parseFloat(str);
       return (int % 360 + 360) % 360 / 360;
     }
+
     function parse1(str) {
       const num = parseFloat(str);
-      if (num < 0)
-        return 0;
-      if (num > 1)
-        return 255;
+      if (num < 0) return 0;
+      if (num > 1) return 255;
       return Math.round(num * 255);
     }
+
     function parsePercentage(str) {
       const int = parseFloat(str);
-      if (int < 0)
-        return 0;
-      if (int > 100)
-        return 1;
+      if (int < 0) return 0;
+      if (int > 100) return 1;
       return int / 100;
     }
 
     function colorToRgba(input) {
       let int32Color = normalizeColor(input);
-      if (int32Color === null)
-        return input;
+      if (int32Color === null) return input;
       int32Color = int32Color || 0;
-      let r = (int32Color & 4278190080) >>> 24;
-      let g = (int32Color & 16711680) >>> 16;
-      let b = (int32Color & 65280) >>> 8;
-      let a = (int32Color & 255) / 255;
+      let r = (int32Color & 0xff000000) >>> 24;
+      let g = (int32Color & 0x00ff0000) >>> 16;
+      let b = (int32Color & 0x0000ff00) >>> 8;
+      let a = (int32Color & 0x000000ff) / 255;
       return `rgba(${r}, ${g}, ${b}, ${a})`;
     }
 
@@ -5781,104 +5182,221 @@
       if (is.fun(range)) {
         return range;
       }
+
       if (is.arr(range)) {
         return createInterpolator({
           range,
-          output,
+          output: output,
           extrapolate
         });
       }
+
       if (is.str(range.output[0])) {
-        return createStringInterpolator(range);
+        return createStringInterpolator$1(range);
       }
+
       const config = range;
       const outputRange = config.output;
       const inputRange = config.range || [0, 1];
-      const extrapolateLeft = config.extrapolateLeft || config.extrapolate || "extend";
-      const extrapolateRight = config.extrapolateRight || config.extrapolate || "extend";
-      const easing = config.easing || ((t) => t);
-      return (input) => {
-        const range2 = findRange(input, inputRange);
-        return interpolate(input, inputRange[range2], inputRange[range2 + 1], outputRange[range2], outputRange[range2 + 1], easing, extrapolateLeft, extrapolateRight, config.map);
+      const extrapolateLeft = config.extrapolateLeft || config.extrapolate || 'extend';
+      const extrapolateRight = config.extrapolateRight || config.extrapolate || 'extend';
+
+      const easing = config.easing || (t => t);
+
+      return input => {
+        const range = findRange(input, inputRange);
+        return interpolate(input, inputRange[range], inputRange[range + 1], outputRange[range], outputRange[range + 1], easing, extrapolateLeft, extrapolateRight, config.map);
       };
     };
+
     function interpolate(input, inputMin, inputMax, outputMin, outputMax, easing, extrapolateLeft, extrapolateRight, map) {
       let result = map ? map(input) : input;
+
       if (result < inputMin) {
-        if (extrapolateLeft === "identity")
-          return result;
-        else if (extrapolateLeft === "clamp")
-          result = inputMin;
+        if (extrapolateLeft === 'identity') return result;else if (extrapolateLeft === 'clamp') result = inputMin;
       }
+
       if (result > inputMax) {
-        if (extrapolateRight === "identity")
-          return result;
-        else if (extrapolateRight === "clamp")
-          result = inputMax;
+        if (extrapolateRight === 'identity') return result;else if (extrapolateRight === 'clamp') result = inputMax;
       }
-      if (outputMin === outputMax)
-        return outputMin;
-      if (inputMin === inputMax)
-        return input <= inputMin ? outputMin : outputMax;
-      if (inputMin === -Infinity)
-        result = -result;
-      else if (inputMax === Infinity)
-        result = result - inputMin;
-      else
-        result = (result - inputMin) / (inputMax - inputMin);
+
+      if (outputMin === outputMax) return outputMin;
+      if (inputMin === inputMax) return input <= inputMin ? outputMin : outputMax;
+      if (inputMin === -Infinity) result = -result;else if (inputMax === Infinity) result = result - inputMin;else result = (result - inputMin) / (inputMax - inputMin);
       result = easing(result);
-      if (outputMin === -Infinity)
-        result = -result;
-      else if (outputMax === Infinity)
-        result = result + outputMin;
-      else
-        result = result * (outputMax - outputMin) + outputMin;
+      if (outputMin === -Infinity) result = -result;else if (outputMax === Infinity) result = result + outputMin;else result = result * (outputMax - outputMin) + outputMin;
       return result;
     }
+
     function findRange(input, inputRange) {
-      for (var i = 1; i < inputRange.length - 1; ++i)
-        if (inputRange[i] >= input)
-          break;
+      for (var i = 1; i < inputRange.length - 1; ++i) if (inputRange[i] >= input) break;
+
       return i - 1;
     }
 
-    const numberRegex = /[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?/g;
-    const colorRegex = /(#(?:[0-9a-f]{2}){2,4}|(#[0-9a-f]{3})|(rgb|hsl)a?\((-?\d+%?[,\s]+){2,3}\s*[\d\.]+%?\))/gi;
-    let namedColorRegex;
-    const rgbaRegex = /rgba\(([0-9\.-]+), ([0-9\.-]+), ([0-9\.-]+), ([0-9\.-]+)\)/gi;
-    const rgbaRound = (_, p1, p2, p3, p4) => `rgba(${Math.round(p1)}, ${Math.round(p2)}, ${Math.round(p3)}, ${p4})`;
-    const createStringInterpolator$1 = (config) => {
-      if (!namedColorRegex)
-        namedColorRegex = colors ? new RegExp(`(${Object.keys(colors).join("|")})`, "g") : /^\b$/;
-      const output = config.output.map((value) => getFluidValue(value).replace(colorRegex, colorToRgba).replace(namedColorRegex, colorToRgba));
-      const keyframes = output.map((value) => value.match(numberRegex).map(Number));
-      const outputRanges = keyframes[0].map((_, i) => keyframes.map((values) => {
-        if (!(i in values)) {
-          throw Error('The arity of each "output" value must be equal');
-        }
-        return values[i];
-      }));
-      const interpolators = outputRanges.map((output2) => createInterpolator({...config, output: output2}));
-      return (input) => {
-        let i = 0;
-        return output[0].replace(numberRegex, () => String(interpolators[i++](input))).replace(rgbaRegex, rgbaRound);
-      };
-    };
+    function _extends$2() {
+      _extends$2 = Object.assign || function (target) {
+        for (var i = 1; i < arguments.length; i++) {
+          var source = arguments[i];
 
-    const prefix = "react-spring: ";
-    let flagInterpolate = false;
-    function deprecateInterpolate() {
-      if (!flagInterpolate) {
-        flagInterpolate = true;
-        console.warn(prefix + 'The "interpolate" function is deprecated in v9 (use "to" instead)');
+          for (var key in source) {
+            if (Object.prototype.hasOwnProperty.call(source, key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+
+        return target;
+      };
+
+      return _extends$2.apply(this, arguments);
+    }
+
+    const $get = Symbol.for('FluidValue.get');
+    const $observers = Symbol.for('FluidValue.observers');
+
+    const hasFluidValue = arg => Boolean(arg && arg[$get]);
+
+    const getFluidValue = arg => arg && arg[$get] ? arg[$get]() : arg;
+
+    function callFluidObserver(observer, event) {
+      if (observer.eventObserved) {
+        observer.eventObserved(event);
+      } else {
+        observer(event);
       }
     }
 
-    function isAnimatedString(value) {
-      return is.str(value) && (value[0] == "#" || /\d/.test(value) || value in (colors || {}));
+    function callFluidObservers(target, event) {
+      let observers = target[$observers];
+
+      if (observers) {
+        observers.forEach(observer => {
+          callFluidObserver(observer, event);
+        });
+      }
     }
 
-    const useOnce = (effect) => React.useEffect(effect, emptyDeps);
+    class FluidValue {
+      constructor(get) {
+        this[$get] = void 0;
+        this[$observers] = void 0;
+
+        if (!get && !(get = this.get)) {
+          throw Error('Unknown getter');
+        }
+
+        setFluidGetter(this, get);
+      }
+
+    }
+
+    const setFluidGetter = (target, get) => setHidden(target, $get, get);
+
+    function addFluidObserver(target, observer) {
+      if (target[$get]) {
+        let observers = target[$observers];
+
+        if (!observers) {
+          setHidden(target, $observers, observers = new Set());
+        }
+
+        if (!observers.has(observer)) {
+          observers.add(observer);
+
+          if (target.observerAdded) {
+            target.observerAdded(observers.size, observer);
+          }
+        }
+      }
+
+      return observer;
+    }
+
+    function removeFluidObserver(target, observer) {
+      let observers = target[$observers];
+
+      if (observers && observers.has(observer)) {
+        const count = observers.size - 1;
+
+        if (count) {
+          observers.delete(observer);
+        } else {
+          target[$observers] = null;
+        }
+
+        if (target.observerRemoved) {
+          target.observerRemoved(count, observer);
+        }
+      }
+    }
+
+    const setHidden = (target, key, value) => Object.defineProperty(target, key, {
+      value,
+      writable: true,
+      configurable: true
+    });
+
+    const numberRegex = /[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?/g;
+    const colorRegex = /(#(?:[0-9a-f]{2}){2,4}|(#[0-9a-f]{3})|(rgb|hsl)a?\((-?\d+%?[,\s]+){2,3}\s*[\d\.]+%?\))/gi;
+    const unitRegex = new RegExp(`(${numberRegex.source})(%|[a-z]+)`, 'i');
+    let namedColorRegex;
+    const rgbaRegex = /rgba\(([0-9\.-]+), ([0-9\.-]+), ([0-9\.-]+), ([0-9\.-]+)\)/gi;
+
+    const rgbaRound = (_, p1, p2, p3, p4) => `rgba(${Math.round(p1)}, ${Math.round(p2)}, ${Math.round(p3)}, ${p4})`;
+
+    const createStringInterpolator = config => {
+      if (!namedColorRegex) namedColorRegex = colors$1 ? new RegExp(`(${Object.keys(colors$1).join('|')})(?!\\w)`, 'g') : /^\b$/;
+      const output = config.output.map(value => getFluidValue(value).replace(colorRegex, colorToRgba).replace(namedColorRegex, colorToRgba));
+      const keyframes = output.map(value => value.match(numberRegex).map(Number));
+      const outputRanges = keyframes[0].map((_, i) => keyframes.map(values => {
+        if (!(i in values)) {
+          throw Error('The arity of each "output" value must be equal');
+        }
+
+        return values[i];
+      }));
+      const interpolators = outputRanges.map(output => createInterpolator(_extends$2({}, config, {
+        output
+      })));
+      return input => {
+        var _output$find;
+
+        const missingUnit = !unitRegex.test(output[0]) && ((_output$find = output.find(value => unitRegex.test(value))) == null ? void 0 : _output$find.replace(numberRegex, ''));
+        let i = 0;
+        return output[0].replace(numberRegex, () => `${interpolators[i++](input)}${missingUnit || ''}`).replace(rgbaRegex, rgbaRound);
+      };
+    };
+
+    const prefix = 'react-spring: ';
+
+    const once = fn => {
+      const func = fn;
+      let called = false;
+
+      if (typeof func != 'function') {
+        throw new TypeError(`${prefix}once requires a function parameter`);
+      }
+
+      return (...args) => {
+        if (!called) {
+          func(...args);
+          called = true;
+        }
+      };
+    };
+
+    const warnInterpolate = once(console.warn);
+    function deprecateInterpolate() {
+      warnInterpolate(`${prefix}The "interpolate" function is deprecated in v9 (use "to" instead)`);
+    }
+    once(console.warn);
+
+    function isAnimatedString(value) {
+      return is.str(value) && (value[0] == '#' || /\d/.test(value) || value in (colors$1 || {}));
+    }
+
+    const useOnce = effect => React.useEffect(effect, emptyDeps);
     const emptyDeps = [];
 
     function useForceUpdate() {
@@ -5891,6 +5409,7 @@
         }
       };
     }
+
     function makeMountedRef() {
       const mounted = {
         current: true,
@@ -5909,8 +5428,10 @@
       const committed = React.useRef();
       const prevCache = committed.current;
       let cache = prevCache;
+
       if (cache) {
         const useCache = Boolean(inputs && cache.inputs && areInputsEqual(inputs, cache.inputs));
+
         if (!useCache) {
           cache = {
             inputs,
@@ -5920,107 +5441,141 @@
       } else {
         cache = initial;
       }
+
       React.useEffect(() => {
         committed.current = cache;
+
         if (prevCache == initial) {
-          initial.inputs = initial.result = void 0;
+          initial.inputs = initial.result = undefined;
         }
       }, [cache]);
       return cache.result;
     }
+
     function areInputsEqual(next, prev) {
       if (next.length !== prev.length) {
         return false;
       }
+
       for (let i = 0; i < next.length; i++) {
         if (next[i] !== prev[i]) {
           return false;
         }
       }
+
       return true;
     }
 
-    const $node = Symbol.for("Animated:node");
-    const isAnimated = (value) => !!value && value[$node] === value;
-    const getAnimated = (owner) => owner && owner[$node];
+    const useLayoutEffect = typeof window !== 'undefined' && window.document && window.document.createElement ? React__namespace.useLayoutEffect : React__namespace.useEffect;
+
+    const $node = Symbol.for('Animated:node');
+    const isAnimated = value => !!value && value[$node] === value;
+    const getAnimated = owner => owner && owner[$node];
     const setAnimated = (owner, node) => defineHidden(owner, $node, node);
-    const getPayload = (owner) => owner && owner[$node] && owner[$node].getPayload();
+    const getPayload = owner => owner && owner[$node] && owner[$node].getPayload();
     class Animated {
       constructor() {
+        this.payload = void 0;
         setAnimated(this, this);
       }
+
       getPayload() {
         return this.payload || [];
       }
+
     }
 
     class AnimatedValue extends Animated {
       constructor(_value) {
         super();
-        this._value = _value;
         this.done = true;
+        this.elapsedTime = void 0;
+        this.lastPosition = void 0;
+        this.lastVelocity = void 0;
+        this.v0 = void 0;
+        this.durationProgress = 0;
+        this._value = _value;
+
         if (is.num(this._value)) {
           this.lastPosition = this._value;
         }
       }
+
       static create(value) {
         return new AnimatedValue(value);
       }
+
       getPayload() {
         return [this];
       }
+
       getValue() {
         return this._value;
       }
+
       setValue(value, step) {
         if (is.num(value)) {
           this.lastPosition = value;
+
           if (step) {
             value = Math.round(value / step) * step;
+
             if (this.done) {
               this.lastPosition = value;
             }
           }
         }
+
         if (this._value === value) {
           return false;
         }
+
         this._value = value;
         return true;
       }
+
       reset() {
-        const {done} = this;
+        const {
+          done
+        } = this;
         this.done = false;
+
         if (is.num(this._value)) {
           this.elapsedTime = 0;
+          this.durationProgress = 0;
           this.lastPosition = this._value;
-          if (done)
-            this.lastVelocity = null;
+          if (done) this.lastVelocity = null;
           this.v0 = null;
         }
       }
+
     }
 
     class AnimatedString extends AnimatedValue {
       constructor(value) {
         super(0);
         this._string = null;
+        this._toString = void 0;
         this._toString = createInterpolator({
           output: [value, value]
         });
       }
+
       static create(value) {
         return new AnimatedString(value);
       }
+
       getValue() {
         let value = this._string;
         return value == null ? this._string = this._toString(this._value) : value;
       }
+
       setValue(value) {
         if (is.str(value)) {
           if (value == this._string) {
             return false;
           }
+
           this._string = value;
           this._value = 1;
         } else if (super.setValue(value)) {
@@ -6028,20 +5583,26 @@
         } else {
           return false;
         }
+
         return true;
       }
+
       reset(goal) {
         if (goal) {
           this._toString = createInterpolator({
             output: [this.getValue(), goal]
           });
         }
+
         this._value = 0;
         super.reset();
       }
+
     }
 
-    const TreeContext = {dependencies: null};
+    const TreeContext = {
+      dependencies: null
+    };
 
     class AnimatedObject extends Animated {
       constructor(source) {
@@ -6049,6 +5610,7 @@
         this.source = source;
         this.setValue(source);
       }
+
       getValue(animated) {
         const values = {};
         eachProp(this.source, (source, key) => {
@@ -6062,15 +5624,18 @@
         });
         return values;
       }
+
       setValue(source) {
         this.source = source;
         this.payload = this._makePayload(source);
       }
+
       reset() {
         if (this.payload) {
-          each(this.payload, (node) => node.reset());
+          each(this.payload, node => node.reset());
         }
       }
+
       _makePayload(source) {
         if (source) {
           const payload = new Set();
@@ -6078,36 +5643,47 @@
           return Array.from(payload);
         }
       }
+
       _addToPayload(source) {
         if (TreeContext.dependencies && hasFluidValue(source)) {
           TreeContext.dependencies.add(source);
         }
+
         const payload = getPayload(source);
+
         if (payload) {
-          each(payload, (node) => this.add(node));
+          each(payload, node => this.add(node));
         }
       }
+
     }
 
     class AnimatedArray extends AnimatedObject {
       constructor(source) {
         super(source);
       }
+
       static create(source) {
         return new AnimatedArray(source);
       }
+
       getValue() {
-        return this.source.map((node) => node.getValue());
+        return this.source.map(node => node.getValue());
       }
+
       setValue(source) {
         const payload = this.getPayload();
+
         if (source.length == payload.length) {
-          return payload.some((node, i) => node.setValue(source[i]));
+          return payload.map((node, i) => node.setValue(source[i])).some(Boolean);
         }
+
         super.setValue(source.map(makeAnimated));
         return true;
       }
+
     }
+
     function makeAnimated(value) {
       const nodeType = isAnimatedString(value) ? AnimatedString : AnimatedValue;
       return nodeType.create(value);
@@ -6118,233 +5694,373 @@
       return parentNode ? parentNode.constructor : is.arr(value) ? AnimatedArray : isAnimatedString(value) ? AnimatedString : AnimatedValue;
     }
 
+    function _extends$1() {
+      _extends$1 = Object.assign || function (target) {
+        for (var i = 1; i < arguments.length; i++) {
+          var source = arguments[i];
+
+          for (var key in source) {
+            if (Object.prototype.hasOwnProperty.call(source, key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+
+        return target;
+      };
+
+      return _extends$1.apply(this, arguments);
+    }
+
     const withAnimated = (Component, host) => {
       const hasInstance = !is.fun(Component) || Component.prototype && Component.prototype.isReactComponent;
       return React.forwardRef((givenProps, givenRef) => {
         const instanceRef = React.useRef(null);
-        const ref = hasInstance && React.useCallback((value) => {
+        const ref = hasInstance && React.useCallback(value => {
           instanceRef.current = updateRef(givenRef, value);
         }, [givenRef]);
         const [props, deps] = getAnimatedState(givenProps, host);
         const forceUpdate = useForceUpdate();
+
         const callback = () => {
           const instance = instanceRef.current;
+
           if (hasInstance && !instance) {
             return;
           }
+
           const didUpdate = instance ? host.applyAnimatedValues(instance, props.getValue(true)) : false;
+
           if (didUpdate === false) {
             forceUpdate();
           }
         };
+
         const observer = new PropsObserver(callback, deps);
         const observerRef = React.useRef();
         useLayoutEffect(() => {
           const lastObserver = observerRef.current;
           observerRef.current = observer;
-          each(deps, (dep) => addFluidObserver(dep, observer));
+          each(deps, dep => addFluidObserver(dep, observer));
+
           if (lastObserver) {
-            each(lastObserver.deps, (dep) => removeFluidObserver(dep, lastObserver));
+            each(lastObserver.deps, dep => removeFluidObserver(dep, lastObserver));
             raf.cancel(lastObserver.update);
           }
         });
         React.useEffect(callback, []);
         useOnce(() => () => {
-          const observer2 = observerRef.current;
-          each(observer2.deps, (dep) => removeFluidObserver(dep, observer2));
+          const observer = observerRef.current;
+          each(observer.deps, dep => removeFluidObserver(dep, observer));
         });
         const usedProps = host.getComponentProps(props.getValue());
-        return /* @__PURE__ */ React.createElement(Component, {
-          ...usedProps,
-          ref
-        });
+        return React__namespace.createElement(Component, _extends$1({}, usedProps, {
+          ref: ref
+        }));
       });
     };
+
     class PropsObserver {
       constructor(update, deps) {
         this.update = update;
         this.deps = deps;
       }
+
       eventObserved(event) {
-        if (event.type == "change") {
+        if (event.type == 'change') {
           raf.write(this.update);
         }
       }
+
     }
+
     function getAnimatedState(props, host) {
       const dependencies = new Set();
       TreeContext.dependencies = dependencies;
-      if (props.style)
-        props = {
-          ...props,
-          style: host.createAnimatedStyle(props.style)
-        };
+      if (props.style) props = _extends$1({}, props, {
+        style: host.createAnimatedStyle(props.style)
+      });
       props = new AnimatedObject(props);
       TreeContext.dependencies = null;
       return [props, dependencies];
     }
+
     function updateRef(ref, value) {
       if (ref) {
-        if (is.fun(ref))
-          ref(value);
-        else
-          ref.current = value;
+        if (is.fun(ref)) ref(value);else ref.current = value;
       }
+
       return value;
     }
 
-    const cacheKey = Symbol.for("AnimatedComponent");
+    const cacheKey = Symbol.for('AnimatedComponent');
     const createHost = (components, {
-      applyAnimatedValues = () => false,
-      createAnimatedStyle = (style) => new AnimatedObject(style),
-      getComponentProps = (props) => props
+      applyAnimatedValues: _applyAnimatedValues = () => false,
+      createAnimatedStyle: _createAnimatedStyle = style => new AnimatedObject(style),
+      getComponentProps: _getComponentProps = props => props
     } = {}) => {
       const hostConfig = {
-        applyAnimatedValues,
-        createAnimatedStyle,
-        getComponentProps
+        applyAnimatedValues: _applyAnimatedValues,
+        createAnimatedStyle: _createAnimatedStyle,
+        getComponentProps: _getComponentProps
       };
-      const animated = (Component) => {
-        const displayName = getDisplayName(Component) || "Anonymous";
+
+      const animated = Component => {
+        const displayName = getDisplayName(Component) || 'Anonymous';
+
         if (is.str(Component)) {
           Component = animated[Component] || (animated[Component] = withAnimated(Component, hostConfig));
         } else {
           Component = Component[cacheKey] || (Component[cacheKey] = withAnimated(Component, hostConfig));
         }
+
         Component.displayName = `Animated(${displayName})`;
         return Component;
       };
+
       eachProp(components, (Component, key) => {
         if (is.arr(components)) {
           key = getDisplayName(Component);
         }
+
         animated[key] = animated(Component);
       });
       return {
         animated
       };
     };
-    const getDisplayName = (arg) => is.str(arg) ? arg : arg && is.str(arg.displayName) ? arg.displayName : is.fun(arg) && arg.name || null;
 
-    const isFrameValue = (value) => value instanceof FrameValue;
-    let nextId = 1;
+    const getDisplayName = arg => is.str(arg) ? arg : arg && is.str(arg.displayName) ? arg.displayName : is.fun(arg) && arg.name || null;
+
+    function _extends() {
+      _extends = Object.assign || function (target) {
+        for (var i = 1; i < arguments.length; i++) {
+          var source = arguments[i];
+
+          for (var key in source) {
+            if (Object.prototype.hasOwnProperty.call(source, key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+
+        return target;
+      };
+
+      return _extends.apply(this, arguments);
+    }
+
+    const config = {
+      default: {
+        tension: 170,
+        friction: 26
+      },
+      gentle: {
+        tension: 120,
+        friction: 14
+      },
+      wobbly: {
+        tension: 180,
+        friction: 12
+      },
+      stiff: {
+        tension: 210,
+        friction: 20
+      },
+      slow: {
+        tension: 280,
+        friction: 60
+      },
+      molasses: {
+        tension: 280,
+        friction: 120
+      }
+    };
+
+    const linear = t => t;
+
+    _extends({}, config.default, {
+      mass: 1,
+      damping: 1,
+      easing: linear,
+      clamp: false
+    });
+
+    const isFrameValue = value => value instanceof FrameValue;
+    let nextId$1 = 1;
     class FrameValue extends FluidValue {
-      constructor() {
-        super(...arguments);
-        this.id = nextId++;
+      constructor(...args) {
+        super(...args);
+        this.id = nextId$1++;
+        this.key = void 0;
         this._priority = 0;
       }
+
       get priority() {
         return this._priority;
       }
+
       set priority(priority) {
         if (this._priority != priority) {
           this._priority = priority;
+
           this._onPriorityChange(priority);
         }
       }
+
       get() {
         const node = getAnimated(this);
         return node && node.getValue();
       }
+
       to(...args) {
         return globals.to(this, args);
       }
+
       interpolate(...args) {
         deprecateInterpolate();
         return globals.to(this, args);
       }
+
       toJSON() {
         return this.get();
       }
+
       observerAdded(count) {
-        if (count == 1)
-          this._attach();
+        if (count == 1) this._attach();
       }
+
       observerRemoved(count) {
-        if (count == 0)
-          this._detach();
+        if (count == 0) this._detach();
       }
-      _attach() {
-      }
-      _detach() {
-      }
+
+      _attach() {}
+
+      _detach() {}
+
       _onChange(value, idle = false) {
         callFluidObservers(this, {
-          type: "change",
+          type: 'change',
           parent: this,
           value,
           idle
         });
       }
+
       _onPriorityChange(priority) {
         if (!this.idle) {
           frameLoop.sort(this);
         }
+
         callFluidObservers(this, {
-          type: "priority",
+          type: 'priority',
           parent: this,
           priority
         });
       }
+
     }
 
-    const SpringContext = ({
-      children,
-      ...props
-    }) => {
+    function _objectWithoutPropertiesLoose$1(source, excluded) {
+      if (source == null) return {};
+      var target = {};
+      var sourceKeys = Object.keys(source);
+      var key, i;
+
+      for (i = 0; i < sourceKeys.length; i++) {
+        key = sourceKeys[i];
+        if (excluded.indexOf(key) >= 0) continue;
+        target[key] = source[key];
+      }
+
+      return target;
+    }
+
+    const _excluded$3 = ["children"];
+    const SpringContext = _ref => {
+      let {
+        children
+      } = _ref,
+          props = _objectWithoutPropertiesLoose$1(_ref, _excluded$3);
+
       const inherited = React.useContext(ctx);
-      const pause = props.pause || !!inherited.pause, immediate = props.immediate || !!inherited.immediate;
-      props = useMemoOne(() => ({pause, immediate}), [pause, immediate]);
-      const {Provider} = ctx;
-      return /* @__PURE__ */ React.createElement(Provider, {
+      const pause = props.pause || !!inherited.pause,
+            immediate = props.immediate || !!inherited.immediate;
+      props = useMemoOne(() => ({
+        pause,
+        immediate
+      }), [pause, immediate]);
+      const {
+        Provider
+      } = ctx;
+      return React__namespace.createElement(Provider, {
         value: props
       }, children);
     };
     const ctx = makeContext(SpringContext, {});
     SpringContext.Provider = ctx.Provider;
     SpringContext.Consumer = ctx.Consumer;
+
     function makeContext(target, init) {
-      Object.assign(target, React.createContext(init));
+      Object.assign(target, React__namespace.createContext(init));
       target.Provider._context = target;
       target.Consumer._context = target;
       return target;
     }
-    each(["stop", "pause", "resume"], (key) => {
-    });
+
+    let TransitionPhase;
+
+    (function (TransitionPhase) {
+      TransitionPhase["MOUNT"] = "mount";
+      TransitionPhase["ENTER"] = "enter";
+      TransitionPhase["UPDATE"] = "update";
+      TransitionPhase["LEAVE"] = "leave";
+    })(TransitionPhase || (TransitionPhase = {}));
 
     class Interpolation extends FrameValue {
       constructor(source, args) {
         super();
-        this.source = source;
+        this.key = void 0;
         this.idle = true;
+        this.calc = void 0;
         this._active = new Set();
+        this.source = source;
         this.calc = createInterpolator(...args);
+
         const value = this._get();
+
         const nodeType = getAnimatedType(value);
         setAnimated(this, nodeType.create(value));
       }
+
       advance(_dt) {
         const value = this._get();
+
         const oldValue = this.get();
+
         if (!isEqual(value, oldValue)) {
           getAnimated(this).setValue(value);
+
           this._onChange(value, this.idle);
         }
+
         if (!this.idle && checkIdle(this._active)) {
           becomeIdle(this);
         }
       }
+
       _get() {
         const inputs = is.arr(this.source) ? this.source.map(getFluidValue) : toArray(getFluidValue(this.source));
         return this.calc(...inputs);
       }
+
       _start() {
         if (this.idle && !checkIdle(this._active)) {
           this.idle = false;
-          each(getPayload(this), (node) => {
+          each(getPayload(this), node => {
             node.done = false;
           });
+
           if (globals.skipAnimation) {
             raf.batchedUpdates(() => this.advance());
             becomeIdle(this);
@@ -6353,108 +6069,151 @@
           }
         }
       }
+
       _attach() {
         let priority = 1;
-        each(toArray(this.source), (source) => {
+        each(toArray(this.source), source => {
           if (hasFluidValue(source)) {
             addFluidObserver(source, this);
           }
+
           if (isFrameValue(source)) {
             if (!source.idle) {
               this._active.add(source);
             }
+
             priority = Math.max(priority, source.priority + 1);
           }
         });
         this.priority = priority;
+
         this._start();
       }
+
       _detach() {
-        each(toArray(this.source), (source) => {
+        each(toArray(this.source), source => {
           if (hasFluidValue(source)) {
             removeFluidObserver(source, this);
           }
         });
+
         this._active.clear();
+
         becomeIdle(this);
       }
+
       eventObserved(event) {
-        if (event.type == "change") {
+        if (event.type == 'change') {
           if (event.idle) {
             this.advance();
           } else {
             this._active.add(event.parent);
+
             this._start();
           }
-        } else if (event.type == "idle") {
-          this._active.delete(event.parent);
-        } else if (event.type == "priority") {
-          this.priority = toArray(this.source).reduce((highest, parent) => Math.max(highest, (isFrameValue(parent) ? parent.priority : 0) + 1), 0);
-        }
+        } else if (event.type == 'idle') {
+            this._active.delete(event.parent);
+          } else if (event.type == 'priority') {
+              this.priority = toArray(this.source).reduce((highest, parent) => Math.max(highest, (isFrameValue(parent) ? parent.priority : 0) + 1), 0);
+            }
       }
+
     }
+
     function isIdle(source) {
       return source.idle !== false;
     }
+
     function checkIdle(active) {
       return !active.size || Array.from(active).every(isIdle);
     }
+
     function becomeIdle(self) {
       if (!self.idle) {
         self.idle = true;
-        each(getPayload(self), (node) => {
+        each(getPayload(self), node => {
           node.done = true;
         });
         callFluidObservers(self, {
-          type: "idle",
+          type: 'idle',
           parent: self
         });
       }
     }
 
     globals.assign({
-      createStringInterpolator: createStringInterpolator$1,
+      createStringInterpolator,
       to: (source, args) => new Interpolation(source, args)
     });
 
-    const isCustomPropRE = /^--/;
-    function dangerousStyleValue(name, value) {
-      if (value == null || typeof value === "boolean" || value === "")
-        return "";
-      if (typeof value === "number" && value !== 0 && !isCustomPropRE.test(name) && !(isUnitlessNumber.hasOwnProperty(name) && isUnitlessNumber[name]))
-        return value + "px";
-      return ("" + value).trim();
+    function _objectWithoutPropertiesLoose(source, excluded) {
+      if (source == null) return {};
+      var target = {};
+      var sourceKeys = Object.keys(source);
+      var key, i;
+
+      for (i = 0; i < sourceKeys.length; i++) {
+        key = sourceKeys[i];
+        if (excluded.indexOf(key) >= 0) continue;
+        target[key] = source[key];
+      }
+
+      return target;
     }
+
+    const _excluded$2 = ["style", "children", "scrollTop", "scrollLeft"];
+    const isCustomPropRE = /^--/;
+
+    function dangerousStyleValue(name, value) {
+      if (value == null || typeof value === 'boolean' || value === '') return '';
+      if (typeof value === 'number' && value !== 0 && !isCustomPropRE.test(name) && !(isUnitlessNumber.hasOwnProperty(name) && isUnitlessNumber[name])) return value + 'px';
+      return ('' + value).trim();
+    }
+
     const attributeCache = {};
     function applyAnimatedValues(instance, props) {
       if (!instance.nodeType || !instance.setAttribute) {
         return false;
       }
-      const isFilterElement = instance.nodeName === "filter" || instance.parentNode && instance.parentNode.nodeName === "filter";
-      const {style, children, scrollTop, scrollLeft, ...attributes} = props;
+
+      const isFilterElement = instance.nodeName === 'filter' || instance.parentNode && instance.parentNode.nodeName === 'filter';
+
+      const _ref = props,
+            {
+        style,
+        children,
+        scrollTop,
+        scrollLeft
+      } = _ref,
+            attributes = _objectWithoutPropertiesLoose(_ref, _excluded$2);
+
       const values = Object.values(attributes);
-      const names = Object.keys(attributes).map((name) => isFilterElement || instance.hasAttribute(name) ? name : attributeCache[name] || (attributeCache[name] = name.replace(/([A-Z])/g, (n) => "-" + n.toLowerCase())));
+      const names = Object.keys(attributes).map(name => isFilterElement || instance.hasAttribute(name) ? name : attributeCache[name] || (attributeCache[name] = name.replace(/([A-Z])/g, n => '-' + n.toLowerCase())));
+
       if (children !== void 0) {
         instance.textContent = children;
       }
+
       for (let name in style) {
         if (style.hasOwnProperty(name)) {
           const value = dangerousStyleValue(name, style[name]);
-          if (name === "float")
-            name = "cssFloat";
-          else if (isCustomPropRE.test(name)) {
+
+          if (isCustomPropRE.test(name)) {
             instance.style.setProperty(name, value);
           } else {
             instance.style[name] = value;
           }
         }
       }
+
       names.forEach((name, i) => {
         instance.setAttribute(name, values[i]);
       });
+
       if (scrollTop !== void 0) {
         instance.scrollTop = scrollTop;
       }
+
       if (scrollLeft !== void 0) {
         instance.scrollLeft = scrollLeft;
       }
@@ -6502,236 +6261,121 @@
       strokeOpacity: true,
       strokeWidth: true
     };
+
     const prefixKey = (prefix, key) => prefix + key.charAt(0).toUpperCase() + key.substring(1);
-    const prefixes = ["Webkit", "Ms", "Moz", "O"];
+
+    const prefixes = ['Webkit', 'Ms', 'Moz', 'O'];
     isUnitlessNumber = Object.keys(isUnitlessNumber).reduce((acc, prop) => {
-      prefixes.forEach((prefix) => acc[prefixKey(prefix, prop)] = acc[prop]);
+      prefixes.forEach(prefix => acc[prefixKey(prefix, prop)] = acc[prop]);
       return acc;
     }, isUnitlessNumber);
 
+    const _excluded$1 = ["x", "y", "z"];
     const domTransforms = /^(matrix|translate|scale|rotate|skew)/;
     const pxTransforms = /^(translate)/;
     const degTransforms = /^(rotate|skew)/;
+
     const addUnit = (value, unit) => is.num(value) && value !== 0 ? value + unit : value;
-    const isValueIdentity = (value, id) => is.arr(value) ? value.every((v) => isValueIdentity(v, id)) : is.num(value) ? value === id : parseFloat(value) === id;
+
+    const isValueIdentity = (value, id) => is.arr(value) ? value.every(v => isValueIdentity(v, id)) : is.num(value) ? value === id : parseFloat(value) === id;
+
     class AnimatedStyle extends AnimatedObject {
-      constructor({x, y, z, ...style}) {
+      constructor(_ref) {
+        let {
+          x,
+          y,
+          z
+        } = _ref,
+            style = _objectWithoutPropertiesLoose(_ref, _excluded$1);
+
         const inputs = [];
         const transforms = [];
+
         if (x || y || z) {
           inputs.push([x || 0, y || 0, z || 0]);
-          transforms.push((xyz) => [
-            `translate3d(${xyz.map((v) => addUnit(v, "px")).join(",")})`,
-            isValueIdentity(xyz, 0)
-          ]);
+          transforms.push(xyz => [`translate3d(${xyz.map(v => addUnit(v, 'px')).join(',')})`, isValueIdentity(xyz, 0)]);
         }
+
         eachProp(style, (value, key) => {
-          if (key === "transform") {
-            inputs.push([value || ""]);
-            transforms.push((transform) => [transform, transform === ""]);
+          if (key === 'transform') {
+            inputs.push([value || '']);
+            transforms.push(transform => [transform, transform === '']);
           } else if (domTransforms.test(key)) {
             delete style[key];
-            if (is.und(value))
-              return;
-            const unit = pxTransforms.test(key) ? "px" : degTransforms.test(key) ? "deg" : "";
+            if (is.und(value)) return;
+            const unit = pxTransforms.test(key) ? 'px' : degTransforms.test(key) ? 'deg' : '';
             inputs.push(toArray(value));
-            transforms.push(key === "rotate3d" ? ([x2, y2, z2, deg]) => [
-              `rotate3d(${x2},${y2},${z2},${addUnit(deg, unit)})`,
-              isValueIdentity(deg, 0)
-            ] : (input) => [
-              `${key}(${input.map((v) => addUnit(v, unit)).join(",")})`,
-              isValueIdentity(input, key.startsWith("scale") ? 1 : 0)
-            ]);
+            transforms.push(key === 'rotate3d' ? ([x, y, z, deg]) => [`rotate3d(${x},${y},${z},${addUnit(deg, unit)})`, isValueIdentity(deg, 0)] : input => [`${key}(${input.map(v => addUnit(v, unit)).join(',')})`, isValueIdentity(input, key.startsWith('scale') ? 1 : 0)]);
           }
         });
+
         if (inputs.length) {
           style.transform = new FluidTransform(inputs, transforms);
         }
+
         super(style);
       }
+
     }
+
     class FluidTransform extends FluidValue {
       constructor(inputs, transforms) {
         super();
+        this._value = null;
         this.inputs = inputs;
         this.transforms = transforms;
-        this._value = null;
       }
+
       get() {
         return this._value || (this._value = this._get());
       }
+
       _get() {
-        let transform = "";
+        let transform = '';
         let identity = true;
         each(this.inputs, (input, i) => {
           const arg1 = getFluidValue(input[0]);
           const [t, id] = this.transforms[i](is.arr(arg1) ? arg1 : input.map(getFluidValue));
-          transform += " " + t;
+          transform += ' ' + t;
           identity = identity && id;
         });
-        return identity ? "none" : transform;
+        return identity ? 'none' : transform;
       }
+
       observerAdded(count) {
-        if (count == 1)
-          each(this.inputs, (input) => each(input, (value) => hasFluidValue(value) && addFluidObserver(value, this)));
+        if (count == 1) each(this.inputs, input => each(input, value => hasFluidValue(value) && addFluidObserver(value, this)));
       }
+
       observerRemoved(count) {
-        if (count == 0)
-          each(this.inputs, (input) => each(input, (value) => hasFluidValue(value) && removeFluidObserver(value, this)));
+        if (count == 0) each(this.inputs, input => each(input, value => hasFluidValue(value) && removeFluidObserver(value, this)));
       }
+
       eventObserved(event) {
-        if (event.type == "change") {
+        if (event.type == 'change') {
           this._value = null;
         }
+
         callFluidObservers(this, event);
       }
+
     }
 
-    const primitives = [
-      "a",
-      "abbr",
-      "address",
-      "area",
-      "article",
-      "aside",
-      "audio",
-      "b",
-      "base",
-      "bdi",
-      "bdo",
-      "big",
-      "blockquote",
-      "body",
-      "br",
-      "button",
-      "canvas",
-      "caption",
-      "cite",
-      "code",
-      "col",
-      "colgroup",
-      "data",
-      "datalist",
-      "dd",
-      "del",
-      "details",
-      "dfn",
-      "dialog",
-      "div",
-      "dl",
-      "dt",
-      "em",
-      "embed",
-      "fieldset",
-      "figcaption",
-      "figure",
-      "footer",
-      "form",
-      "h1",
-      "h2",
-      "h3",
-      "h4",
-      "h5",
-      "h6",
-      "head",
-      "header",
-      "hgroup",
-      "hr",
-      "html",
-      "i",
-      "iframe",
-      "img",
-      "input",
-      "ins",
-      "kbd",
-      "keygen",
-      "label",
-      "legend",
-      "li",
-      "link",
-      "main",
-      "map",
-      "mark",
-      "menu",
-      "menuitem",
-      "meta",
-      "meter",
-      "nav",
-      "noscript",
-      "object",
-      "ol",
-      "optgroup",
-      "option",
-      "output",
-      "p",
-      "param",
-      "picture",
-      "pre",
-      "progress",
-      "q",
-      "rp",
-      "rt",
-      "ruby",
-      "s",
-      "samp",
-      "script",
-      "section",
-      "select",
-      "small",
-      "source",
-      "span",
-      "strong",
-      "style",
-      "sub",
-      "summary",
-      "sup",
-      "table",
-      "tbody",
-      "td",
-      "textarea",
-      "tfoot",
-      "th",
-      "thead",
-      "time",
-      "title",
-      "tr",
-      "track",
-      "u",
-      "ul",
-      "var",
-      "video",
-      "wbr",
-      "circle",
-      "clipPath",
-      "defs",
-      "ellipse",
-      "foreignObject",
-      "g",
-      "image",
-      "line",
-      "linearGradient",
-      "mask",
-      "path",
-      "pattern",
-      "polygon",
-      "polyline",
-      "radialGradient",
-      "rect",
-      "stop",
-      "svg",
-      "text",
-      "tspan"
-    ];
+    const primitives = ['a', 'abbr', 'address', 'area', 'article', 'aside', 'audio', 'b', 'base', 'bdi', 'bdo', 'big', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'cite', 'code', 'col', 'colgroup', 'data', 'datalist', 'dd', 'del', 'details', 'dfn', 'dialog', 'div', 'dl', 'dt', 'em', 'embed', 'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hgroup', 'hr', 'html', 'i', 'iframe', 'img', 'input', 'ins', 'kbd', 'keygen', 'label', 'legend', 'li', 'link', 'main', 'map', 'mark', 'menu', 'menuitem', 'meta', 'meter', 'nav', 'noscript', 'object', 'ol', 'optgroup', 'option', 'output', 'p', 'param', 'picture', 'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'script', 'section', 'select', 'small', 'source', 'span', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr', 'track', 'u', 'ul', 'var', 'video', 'wbr', 'circle', 'clipPath', 'defs', 'ellipse', 'foreignObject', 'g', 'image', 'line', 'linearGradient', 'mask', 'path', 'pattern', 'polygon', 'polyline', 'radialGradient', 'rect', 'stop', 'svg', 'text', 'tspan'];
 
+    const _excluded = ["scrollTop", "scrollLeft"];
     globals.assign({
       batchedUpdates: ReactDom.unstable_batchedUpdates,
-      createStringInterpolator: createStringInterpolator$1,
-      colors: colors$1
+      createStringInterpolator,
+      colors
     });
     createHost(primitives, {
-      applyAnimatedValues: applyAnimatedValues,
-      createAnimatedStyle: (style) => new AnimatedStyle(style),
-      getComponentProps: ({scrollTop, scrollLeft, ...props}) => props
+      applyAnimatedValues,
+      createAnimatedStyle: style => new AnimatedStyle(style),
+      getComponentProps: _ref => {
+        let props = _objectWithoutPropertiesLoose(_ref, _excluded);
+
+        return props;
+      }
     });
 
     /**
@@ -6760,6 +6404,68 @@
         ? _baseDifference(array, _baseFlatten(values, 1, isArrayLikeObject_1, true))
         : [];
     });
+
+    /**
+     * 检测是否为字符串
+     * @param {*} arg - 需待查询的对象
+     * @returns {boolean}
+     * */
+    function isString(arg) {
+      return typeof arg === 'string';
+    }
+
+    function omit(obj, props) {
+      if (isString(props)) {
+        props = props.split(',').map(key => key.trim());
+      }
+      const keys = Object.keys(obj);
+      const result = {};
+      keys.forEach(item => {
+        if (props.indexOf(item) === -1) {
+          result[item] = obj[item];
+        }
+      });
+      return result;
+    }
+
+    function createRandString(number = 1) {
+      return Array.from({ length: number }).reduce(prev => {
+        return prev + Math.random().toString(36).substr(2);
+      }, '');
+    }
+
+    const portalsID = 'J__PORTALS__NODE__';
+    const getPortalsNode = namespace => {
+      const id = portalsID + (namespace ? namespace.toLocaleUpperCase() : 'DEFAULT');
+
+      let portalsEl = document.getElementById(id);
+
+      if (!portalsEl) {
+        const el = document.createElement('div');
+        el.id = id;
+        portalsEl = document.body.appendChild(el);
+      }
+      return portalsEl;
+    };
+
+    const defer = (fn, ...args) => setTimeout(fn, 1, ...args);
+
+    function getGlobal() {
+      // eslint-disable-next-line no-restricted-globals
+      if (typeof self !== 'undefined') {
+        // eslint-disable-next-line no-restricted-globals
+        return self;
+      }
+      if (typeof window !== 'undefined') {
+        return window;
+      }
+      if (typeof global !== 'undefined') {
+        return global;
+      }
+      throw new Error('unable to locate global object');
+    }
+
+    getGlobal();
 
     // RenderApiInstance.setOption()的有效值
     var updateOptionWhiteList = ['defaultState', 'wrap', 'maxInstance'];
@@ -6867,8 +6573,8 @@
                 setStateById(id, (_a = {}, _a[showKey] = cur, _a));
                 changeEvent.emit();
             }, 
-            // RenderApiComponentBaseProps
-            _a.onDispose = dispose.bind(null, id), _a.instanceRef = function (instance) {
+            // below RenderApiComponentBaseProps
+            _a.onDispose = dispose.bind(null, id), _a.onUpdate = setStateById.bind(null, id), _a.instanceRef = function (instance) {
                 innerInstance = instance;
                 // 在实例可用后, 如果unsafeCallQueue存在内容, 则全部进行处理
                 if (innerInstance && unsafeCallQueue.length) {
@@ -6880,7 +6586,7 @@
                 show: show.bind(null, id),
                 dispose: dispose.bind(null, id),
                 state: _state,
-                setState: setStateById.bind(null, id),
+                setState: _state.onUpdate,
                 current: null,
                 safe: function (cb) {
                     if (!cb)

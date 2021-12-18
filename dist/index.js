@@ -110,8 +110,8 @@ function create(opt) {
             setStateById(id, (_a = {}, _a[showKey] = cur, _a));
             changeEvent.emit();
         }, 
-        // RenderApiComponentBaseProps
-        _a.onDispose = dispose.bind(null, id), _a.instanceRef = function (instance) {
+        // below RenderApiComponentBaseProps
+        _a.onDispose = dispose.bind(null, id), _a.onUpdate = setStateById.bind(null, id), _a.instanceRef = function (instance) {
             innerInstance = instance;
             // 在实例可用后, 如果unsafeCallQueue存在内容, 则全部进行处理
             if (innerInstance && unsafeCallQueue.length) {
@@ -123,7 +123,7 @@ function create(opt) {
             show: show.bind(null, id),
             dispose: dispose.bind(null, id),
             state: _state,
-            setState: setStateById.bind(null, id),
+            setState: _state.onUpdate,
             current: null,
             safe: function (cb) {
                 if (!cb)
