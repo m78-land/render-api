@@ -20,7 +20,7 @@ export interface RenderApiComponentProps<S, I = null> extends RenderApiComponent
 /**
  * 实现组件会接受的基础props, 实现组件可以以此类型作为基础props
  *
- * 变更此类型时应注意是否需要同步setStateWhiteList
+ * 变更此类型时应注意是否需要同步setStateWhiteList和_OmitBuiltState
  * */
 export interface RenderApiComponentBaseProps<S, I = null> {
   /** 通知上层组件销毁本组件的实例 */

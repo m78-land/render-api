@@ -14,7 +14,7 @@ import {
 // RenderApiInstance.setOption()的有效值
 const updateOptionWhiteList = ['defaultState', 'wrap', 'maxInstance'];
 // RenderApiComponentProps.setState()的有效值onChange应动态从changeKey获取
-const setStateWhiteList = ['onDispose', 'instanceRef'];
+const setStateWhiteList = ['onDispose', 'onUpdate', 'instanceRef'];
 
 /**
  * 接收配置并创建一个api实例
