@@ -97,12 +97,15 @@ export interface RenderApiComponentInstance<S, I> {
     state: S;
     /** 更新渲染组件的state */
     setState: (nState: Partial<_OmitBuiltState<S>>) => void;
-    /** 存放组件内部对外暴露的属性和方法，由于组件渲染过程是异步的，所以此属性会延迟设置，如果实现组件未扩展任何东西则始终为null */
+    /**
+     * 存放组件内部对外暴露的属性和方法，由于组件渲染过程是异步的，所以此属性会延迟设置，如果实现组件未扩展任何东西则始终为null
+     * - 如果需要在render()执行后马上获取此实例, 请使用safe()并在其内部进行操作
+     * - 通常实现组件渲染的时间都非常的短, 除了在render后立刻访问, 直接使用instance.current访问实例也是可行的
+     * */
     current: I;
     /**
      * 由于组件的渲染是异步的, current在创建render实例后并不能马上访问
      * 此时可以通过safe调用来安全的访问实例, safe会在实例可用后立刻进行回调
-     * 通常实现组件渲染的时间都非常的短, 所以只要不是在render后立刻访问, 直接使用instance.current访问实例也是可行的
      * */
     safe: (cb: () => void) => void;
 }
@@ -118,5 +121,5 @@ export interface _ComponentItem {
 /**
  * 过滤调内部属性的state
  * */
-export declare type _OmitBuiltState<S> = Omit<S, 'show' | 'onChange' | 'onDispose' | 'instanceRef'>;
+export declare type _OmitBuiltState<S> = Omit<S, 'show' | 'onChange' | 'onDispose' | 'onUpdate' | 'instanceRef'>;
 //# sourceMappingURL=types.d.ts.map
