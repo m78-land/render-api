@@ -4,6 +4,7 @@ export {
   RenderApiOption,
   RenderApiInstance,
   RenderApiComponentBaseProps,
+  RenderApiComponentProps,
   RenderApiComponentInstance,
 } from './types';
 

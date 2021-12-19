@@ -7,7 +7,7 @@ import ReactDom from 'react-dom';
 // RenderApiInstance.setOption()的有效值
 var updateOptionWhiteList = ['defaultState', 'wrap', 'maxInstance'];
 // RenderApiComponentProps.setState()的有效值onChange应动态从changeKey获取
-var setStateWhiteList = ['onDispose', 'instanceRef'];
+var setStateWhiteList = ['onDispose', 'onUpdate', 'instanceRef'];
 /**
  * 接收配置并创建一个api实例
  * - S - 组件能够接收的状态, 对应实现组件的扩展props
