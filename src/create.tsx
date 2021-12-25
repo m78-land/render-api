@@ -173,7 +173,7 @@ function create<S extends object, I = null>(opt: RenderApiOption<S>): RenderApiI
       show: show.bind(null, id),
       dispose: dispose.bind(null, id),
       state: _state as any,
-      setState: _state.onUpdate,
+      setState: _state.onUpdate!,
       current: null,
       safe: cb => {
         if (!cb) return;

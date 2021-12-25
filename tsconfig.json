@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "@m78/render-api": ["src/index.ts"],
+      "@m78/render-api": ["src/index.ts"]
 //      "MyLab": [
 //        "src/index.ts"
 //      ]
@@ -13,7 +13,7 @@
       "dom.iterable",
       "esnext"
     ],
-
+    "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
@@ -23,7 +23,7 @@
     "resolveJsonModule": true,
     "jsx": "react",
     "strictPropertyInitialization": false,
-    "importHelpers": true,
+    "importHelpers": true
   },
   "include": [
     "node_modules/@docusaurus/module-type-aliases/src/index.d.ts",

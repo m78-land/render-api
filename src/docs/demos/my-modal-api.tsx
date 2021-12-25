@@ -44,7 +44,7 @@ const MyModal = ({ show = false, title, content, onChange, instanceRef }: MyModa
     <div className={clsx(sty.MyModal, show1 ? sty.Open : sty.Close)}>
       <div className={sty.Title}>
         <span>{title}</span>
-        <span className={sty.CloseBtn} onClick={() => onChange(false)}>
+        <span className={sty.CloseBtn} onClick={() => onChange?.(false)}>
           close
         </span>
       </div>

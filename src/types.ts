@@ -1,5 +1,5 @@
 import { createEvent } from '@lxjx/hooks';
-import React, { RefCallback } from 'react';
+import React from 'react';
 import { AnyFunction } from '@lxjx/utils';
 
 /**
@@ -12,9 +12,9 @@ export type ComponentType<P = any> = React.ComponentType<P> | AnyFunction;
  * */
 export interface RenderApiComponentProps<S, I = null> extends RenderApiComponentBaseProps<S, I> {
   /** 是否显示 */
-  show: boolean;
+  show?: boolean;
   /** show状态变更时通知父组件 */
-  onChange: (cur: boolean) => boolean;
+  onChange?: (cur: boolean) => void;
 }
 
 /**
@@ -24,14 +24,14 @@ export interface RenderApiComponentProps<S, I = null> extends RenderApiComponent
  * */
 export interface RenderApiComponentBaseProps<S, I = null> {
   /** 通知上层组件销毁本组件的实例 */
-  onDispose: () => void;
+  onDispose?: () => void;
   /**
    * 更新state, 效果与RenderApiComponentInstance.setState相同, 区别是此回调由实现组件调用
    * 使用此回调来通知外部组件更新传递给自身的state
    * */
-  onUpdate: RenderApiComponentInstance<S, I>['setState'];
+  onUpdate?: RenderApiComponentInstance<S, I>['setState'];
   /** 当需要对外暴露更多的api时使用, 将额外的api挂载到此ref */
-  instanceRef: RefCallback<I>;
+  instanceRef?: React.Ref<I>;
 }
 
 /**
