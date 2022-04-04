@@ -1,7 +1,7 @@
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('react'), require('react-dom')) :
     typeof define === 'function' && define.amd ? define(['react', 'react-dom'], factory) :
-    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.RollupPlay = factory(global.React, global.ReactDom));
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.RenderApi = factory(global.React, global.ReactDom));
 }(this, (function (React, ReactDom) { 'use strict';
 
     function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
@@ -67,90 +67,12 @@
     }
 
     /**
-     * 自定义事件，用于多个组件间或组件外进行通讯
+     * 获取表示对象原始类型的字符串
+     * @param {*} o - 需要查询的字符
+     *  @returns {string}
      * */
-    function createEvent() {
-        var listeners = [];
-        var useEvent = function (listener) {
-            var memoHandle = useFn(listener);
-            React.useEffect(function () {
-                on(memoHandle);
-                return function () { return off(memoHandle); };
-            }, []);
-        };
-        function on(listener) {
-            listeners.push(listener);
-        }
-        function off(listener) {
-            var ind = listeners.indexOf(listener);
-            if (ind !== -1)
-                listeners.splice(ind, 1);
-        }
-        function emit() {
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
-            listeners.forEach(function (listener) { return listener.apply(void 0, args); });
-        }
-        return {
-            /** 以hook的形式注册一个事件监听器，会在unmount时自动解绑事件 */
-            useEvent: useEvent,
-            /** 注册一个事件监听器 */
-            on: on,
-            /** 解绑指定的事件监听器 */
-            off: off,
-            /** 触发所有正在监听的事件 */
-            emit: emit,
-        };
-    }
 
-    /**
-     * 检测是否为字符串
-     * @param {*} arg - 需待查询的对象
-     * @returns {boolean}
-     * */
-    function isString(arg) {
-      return typeof arg === 'string';
-    }
-
-    function omit(obj, props) {
-      if (isString(props)) {
-        props = props.split(',').map(key => key.trim());
-      }
-      const keys = Object.keys(obj);
-      const result = {};
-      keys.forEach(item => {
-        if (props.indexOf(item) === -1) {
-          result[item] = obj[item];
-        }
-      });
-      return result;
-    }
-
-    function createRandString(number = 1) {
-      return Array.from({ length: number }).reduce(prev => {
-        return prev + Math.random().toString(36).substr(2);
-      }, '');
-    }
-
-    const portalsID = 'J__PORTALS__NODE__';
-    const getPortalsNode = namespace => {
-      const id = portalsID + (namespace ? namespace.toLocaleUpperCase() : 'DEFAULT');
-
-      let portalsEl = document.getElementById(id);
-
-      if (!portalsEl) {
-        const el = document.createElement('div');
-        el.id = id;
-        portalsEl = document.body.appendChild(el);
-      }
-      return portalsEl;
-    };
-
-    const defer = (fn, ...args) => setTimeout(fn, 1, ...args);
-
-    function getGlobal() {
+    function getGlobal$1() {
       // eslint-disable-next-line no-restricted-globals
       if (typeof self !== 'undefined') {
         // eslint-disable-next-line no-restricted-globals
@@ -165,7 +87,51 @@
       throw new Error('unable to locate global object');
     }
 
-    const __GLOBAL__ = getGlobal();
+    const __GLOBAL__ = getGlobal$1();
+
+    function createEvent$1() {
+      const listeners = [];
+
+      function on(listener) {
+        listeners.push(listener);
+      }
+
+      function off(listener) {
+        const ind = listeners.indexOf(listener);
+        if (ind !== -1) listeners.splice(ind, 1);
+      }
+
+      function emit(...args) {
+        listeners.forEach(listener => listener(...args));
+      }
+
+      return {
+        on,
+        off,
+        emit,
+      };
+    }
+
+    /** 增强一个现有事件对象 */
+    function enhance(event) {
+        var useEvent = function (listener) {
+            var memoHandle = useFn(listener);
+            React.useEffect(function () {
+                event.on(memoHandle);
+                return function () { return event.off(memoHandle); };
+            }, []);
+        };
+        return Object.assign(event, {
+            useEvent: useEvent,
+        });
+    }
+    /**
+     * 自定义事件，用于多个组件间或组件外进行通讯
+     * */
+    function createEvent() {
+        return enhance(createEvent$1());
+    }
+    createEvent.enhance = enhance;
 
     /**
      * Removes all key-value entries from the list cache.
@@ -595,7 +561,7 @@
      * _.isFunction(/abc/);
      * // => false
      */
-    function isFunction(value) {
+    function isFunction$1(value) {
       if (!isObject_1(value)) {
         return false;
       }
@@ -605,7 +571,7 @@
       return tag == funcTag$1 || tag == genTag || tag == asyncTag || tag == proxyTag;
     }
 
-    var isFunction_1 = isFunction;
+    var isFunction_1 = isFunction$1;
 
     /** Used to detect overreaching core-js shims. */
     var coreJsData = _root['__core-js_shared__'];
@@ -2369,11 +2335,11 @@
      * 用于代替`useCallback`，使回调函数的引用地址永久不变, 从而减少消费组件不必要的更新。
      * 该hook的另一个用例是解决闭包导致的回调内外状态不一致问题，并且它不需要传递`deps`参数
      * @param fn - 需要`memo`化的函数
-     * @param wraper - 接收fn并返回，可以藉此对函数实现节流等增强操作, 只在初始化和deps改变时调用
-     * @param deps - 依赖数组，如果传入，其中任意值改变都会重载缓存的fn，可以用来更新wraper包装的函数
+     * @param wrapper - 接收fn并返回，可以藉此对函数实现节流等增强操作, 只在初始化和deps改变时调用
+     * @param deps - 依赖数组，如果传入，其中任意值改变都会重载缓存的fn，可以用来更新wrapper包装的函数
      * @returns - 经过memo化的函数
      */
-    function useFn(fn, wraper, deps) {
+    function useFn(fn, wrapper, deps) {
         if (deps === void 0) { deps = []; }
         var fnRef = React.useRef();
         var memoFnRef = React.useRef(null);
@@ -2398,7 +2364,7 @@
                 }
                 return fnRef.current.apply(this, args);
             }
-            memoFnRef.current = wraper ? wraper(memoFn) : memoFn;
+            memoFnRef.current = wrapper ? wrapper(memoFn) : memoFn;
         }
         return memoFnRef.current;
     }
@@ -6422,6 +6388,95 @@
         return ResizeObserver;
     }))();
 
+    /**
+     * 检测是否为字符串
+     * @param {*} arg - 需待查询的对象
+     * @returns {boolean}
+     * */
+
+    function isString(arg) {
+      return typeof arg === 'string';
+    }
+    /**
+     * 检测是否为数组
+     * @param {*} arg - 需待查询的对象
+     * @returns {boolean}
+     * */
+
+    function isFunction(arg) {
+      return typeof arg === 'function';
+    }
+
+    function pickOrOmit(obj, props, isPick) {
+      if (isString(props)) {
+        props = props.split(',').map(function (key) {
+          return key.trim();
+        });
+      }
+
+      var keys = Object.keys(obj);
+      var result = {};
+      keys.forEach(function (item) {
+        var cond = isPick ? props.indexOf(item) !== -1 : props.indexOf(item) === -1;
+
+        if (cond) {
+          result[item] = obj[item];
+        }
+      });
+      return result;
+    }
+
+    function omit(obj, props) {
+      return pickOrOmit(obj, props);
+    }
+    function createRandString() {
+      var number = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+      return Array.from({
+        length: number
+      }).reduce(function (prev) {
+        return prev + Math.random().toString(36).substr(2);
+      }, '');
+    }
+    var portalsID = 'J__PORTALS__NODE__';
+    var getPortalsNode = function getPortalsNode(namespace) {
+      var id = portalsID + (namespace ? namespace.toLocaleUpperCase() : 'DEFAULT');
+      var portalsEl = document.getElementById(id);
+
+      if (!portalsEl) {
+        var el = document.createElement('div');
+        el.id = id;
+        portalsEl = document.body.appendChild(el);
+      }
+
+      return portalsEl;
+    };
+    var defer = function defer(fn) {
+      for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+        args[_key3 - 1] = arguments[_key3];
+      }
+
+      return setTimeout.apply(void 0, [fn, 1].concat(args));
+    };
+
+    function getGlobal() {
+      // eslint-disable-next-line no-restricted-globals
+      if (typeof self !== 'undefined') {
+        // eslint-disable-next-line no-restricted-globals
+        return self;
+      }
+
+      if (typeof window !== 'undefined') {
+        return window;
+      }
+
+      if (typeof global !== 'undefined') {
+        return global;
+      }
+
+      throw new Error('unable to locate global object');
+    }
+    getGlobal();
+
     // RenderApiInstance.setOption()的有效值
     var updateOptionWhiteList = ['defaultState', 'wrap', 'maxInstance'];
     // RenderApiComponentProps.setState()的有效值onChange应动态从changeKey获取
@@ -6522,6 +6577,9 @@
             var innerInstance = null;
             /** 存储所有safe操作, 并在RenderApiComponentInstance.current存在时调用 */
             var unsafeCallQueue = [];
+            if (isFunction(option.omitState)) {
+                state = option.omitState(state);
+            }
             /** 创建组件state */
             var _state = __assign(__assign(__assign({}, option.defaultState), state), (_a = {}, _a[showKey] = true, _a[changeKey] = function (cur) {
                 var _a;

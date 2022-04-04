@@ -1,7 +1,7 @@
 import { __assign, __spreadArray } from 'tslib';
 import React, { useMemo, useState } from 'react';
 import { createEvent } from '@lxjx/hooks';
-import { omit, createRandString, defer, getPortalsNode } from '@lxjx/utils';
+import { omit, createRandString, isFunction, defer, getPortalsNode } from '@lxjx/utils';
 import ReactDom from 'react-dom';
 
 // RenderApiInstance.setOption()的有效值
@@ -104,6 +104,9 @@ function create(opt) {
         var innerInstance = null;
         /** 存储所有safe操作, 并在RenderApiComponentInstance.current存在时调用 */
         var unsafeCallQueue = [];
+        if (isFunction(option.omitState)) {
+            state = option.omitState(state);
+        }
         /** 创建组件state */
         var _state = __assign(__assign(__assign({}, option.defaultState), state), (_a = {}, _a[showKey] = true, _a[changeKey] = function (cur) {
             var _a;

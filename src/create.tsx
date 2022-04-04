@@ -1,6 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { createEvent } from '@lxjx/hooks';
-import { AnyFunction, createRandString, defer, getPortalsNode, omit } from '@lxjx/utils';
+import {
+  AnyFunction,
+  createRandString,
+  defer,
+  getPortalsNode,
+  isFunction,
+  omit,
+} from '@lxjx/utils';
 import ReactDom from 'react-dom';
 import {
   RenderApiComponentInstance,
@@ -8,7 +15,7 @@ import {
   RenderApiOption,
   _ComponentItem,
   RenderApiComponentBaseProps,
-  _OmitBuiltState,
+  RenderApiOmitBuiltState,
 } from './types';
 
 // RenderApiInstance.setOption()的有效值
@@ -101,7 +108,7 @@ function create<S extends object, I = null>(opt: RenderApiOption<S>): RenderApiI
   }
 
   /** 设置指定id的实例状态, 不更新状态 */
-  function setStateById(id: string, nState: Partial<_OmitBuiltState<S>>) {
+  function setStateById(id: string, nState: Partial<RenderApiOmitBuiltState<S>>) {
     const ind = getIndexById(id);
     if (ind === -1) return;
     setStateByCurrent(ctx.list[ind], nState);
@@ -113,7 +120,7 @@ function create<S extends object, I = null>(opt: RenderApiOption<S>): RenderApiI
    * */
   function setStateByCurrent(
     current: _ComponentItem,
-    nState: Partial<_OmitBuiltState<S>>,
+    nState: Partial<RenderApiOmitBuiltState<S>>,
     autoUpdate = true,
   ) {
     const omitKeys = [...setStateWhiteList, changeKey].join(',');
@@ -136,12 +143,16 @@ function create<S extends object, I = null>(opt: RenderApiOption<S>): RenderApiI
   }
 
   /** 创建并渲染一个实例 */
-  function render(state: _OmitBuiltState<S>) {
+  function render(state: Partial<RenderApiOmitBuiltState<S>>) {
     const id = createRandString();
 
     let innerInstance: any = null;
     /** 存储所有safe操作, 并在RenderApiComponentInstance.current存在时调用 */
     const unsafeCallQueue: AnyFunction[] = [];
+
+    if (isFunction(option.omitState)) {
+      state = option.omitState(state);
+    }
 
     /** 创建组件state */
     const _state: RenderApiComponentBaseProps<S, I> = {

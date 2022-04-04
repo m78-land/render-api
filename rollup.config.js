@@ -52,19 +52,16 @@ export default [
   {
     ...common,
     // umd的外部化包手动添加，通常组会排除主要依赖，如react，react-dom等
-    external: [
-      'react',
-      'react-dom'
-    ],
+    external: ['react', 'react-dom'],
     plugins: pluginsCommon,
     output: {
       ...outputCommon,
       format: 'umd',
       entryFileNames: '[name].[format].js',
-      name: 'RollupPlay',
+      name: 'RenderApi',
       globals: {
-        React: 'React',
-        ReactDom: 'ReactDom',
+        react: 'React',
+        'react-dom': 'ReactDom',
       },
     },
   },

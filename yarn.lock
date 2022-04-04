@@ -933,6 +933,13 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
+"@babel/runtime@^7.17.2":
+  version "7.17.8"
+  resolved "https://registry.npmjs.org/@babel/runtime/-/runtime-7.17.8.tgz#3e56e4aff81befa55ac3ac6a0967349fd1c5bca2"
+  integrity sha512-dQpEpK0O9o6lj6oPu0gRDbbnk+4LeHlNcBpspf6Olzt3GIX4P1lWF1gS+pHLDFlaJvbR6q7jCfQ08zA4QJBnmA==
+  dependencies:
+    regenerator-runtime "^0.13.4"
+
 "@babel/template@^7.12.13", "@babel/template@^7.3.3":
   version "7.12.13"
   resolved "https://registry.npm.taobao.org/@babel/template/download/@babel/template-7.12.13.tgz?cache=0&sync_timestamp=1612314730561&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40babel%2Ftemplate%2Fdownload%2F%40babel%2Ftemplate-7.12.13.tgz#530265be8a2589dbb37523844c5bcb55947fb327"
@@ -1209,12 +1216,12 @@
     "@types/yargs" "^15.0.0"
     chalk "^4.0.0"
 
-"@lxjx/hooks@^1.23.1":
-  version "1.23.1"
-  resolved "https://registry.npmjs.org/@lxjx/hooks/-/hooks-1.23.1.tgz#b71c4d2b23f3fb243cc596db36b8098f247208d5"
-  integrity sha512-l2l0maPD5z/hommbjw9DM9/7qwgIPQ+S0vhYFe63RCJuF54z8qhDoxr7qs/tEaRl5kv70fa3Kb841tS8PartwQ==
+"@lxjx/hooks@^1.30.0":
+  version "1.30.0"
+  resolved "https://registry.npmjs.org/@lxjx/hooks/-/hooks-1.30.0.tgz#7368b27ed2fb2d60d69c3233e61a79864ab0acd2"
+  integrity sha512-WQ3fUn64OjAw5omwch7PDa35eKhf17nK75TSo8XzLXl0aTM8w5I6oLi6H4iI2UWTLTM/zvqqWl1ohHKeHmy5qg==
   dependencies:
-    "@lxjx/utils" "^1.15.0"
+    "@lxjx/utils" "^1.7.7"
     lodash "^4.17.15"
     query-string "^7.0.1"
     react-spring "^9.3.3"
@@ -1229,11 +1236,20 @@
     "@umijs/fabric" "2.2.0"
     prettier "^2.0.5"
 
-"@lxjx/utils@^1.15.0":
-  version "1.15.0"
-  resolved "https://registry.npmjs.org/@lxjx/utils/-/utils-1.15.0.tgz#3f3c6e4184a994a64e1b85f3f1f78b8a56f78c20"
-  integrity sha512-CTFf3pIzuU9YOWrCtIROB7hBBM+TrslxcY1kF2vbJmDe3NjddGo8DKE/M0D5/K91G4Og6ZhR9Aq2H0cQSyIfPA==
+"@lxjx/utils@^1.7.7":
+  version "1.7.7"
+  resolved "https://registry.npmjs.org/@lxjx/utils/-/utils-1.7.7.tgz#c0c9074937d3dc3811e9049ed23090efec54d3c9"
+  integrity sha512-kmfCO32BAS8JinnrP0W7a3po55iObBqlaxOsS5cXlS6NBLkBgoTpXCHBQAI9onNqOPiySokk2gdgn0SvYG/zRw==
   dependencies:
+    lodash "^4.17.21"
+    tslib "^2.1.0"
+
+"@lxjx/utils@^1.7.9":
+  version "1.7.9"
+  resolved "https://registry.npmjs.org/@lxjx/utils/-/utils-1.7.9.tgz#f3b6c88e985d9b06eb05711850fc8415ab3ed47a"
+  integrity sha512-OYFCNX3t34AOeaCCj3r3tKRtsmuBxs314L1wNfsQ5G9H6f9C/QGERNuHu/n1T08f3Iwd6xAnpt/2OeumCYifXA==
+  dependencies:
+    "@babel/runtime" "^7.17.2"
     lodash "^4.17.21"
     tslib "^2.1.0"
 
