@@ -30,7 +30,7 @@
     var React__default = /*#__PURE__*/_interopDefaultLegacy(React);
     var ReactDom__default = /*#__PURE__*/_interopDefaultLegacy(ReactDom);
 
-    /*! *****************************************************************************
+    /******************************************************************************
     Copyright (c) Microsoft Corporation.
 
     Permission to use, copy, modify, and/or distribute this software for any
@@ -45,15 +45,15 @@
     PERFORMANCE OF THIS SOFTWARE.
     ***************************************************************************** */
 
-    var __assign = function() {
-        __assign = Object.assign || function __assign(t) {
+    var __assign$1 = function() {
+        __assign$1 = Object.assign || function __assign(t) {
             for (var s, i = 1, n = arguments.length; i < n; i++) {
                 s = arguments[i];
                 for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
             }
             return t;
         };
-        return __assign.apply(this, arguments);
+        return __assign$1.apply(this, arguments);
     };
 
     function __spreadArray(to, from, pack) {
@@ -2303,6 +2303,32 @@
     }
 
     var _baseIsEqual = baseIsEqual;
+
+    /*! *****************************************************************************
+    Copyright (c) Microsoft Corporation.
+
+    Permission to use, copy, modify, and/or distribute this software for any
+    purpose with or without fee is hereby granted.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+    AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+    LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+    PERFORMANCE OF THIS SOFTWARE.
+    ***************************************************************************** */
+
+    var __assign = function() {
+        __assign = Object.assign || function __assign(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+                s = arguments[i];
+                for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+            }
+            return t;
+        };
+        return __assign.apply(this, arguments);
+    };
 
     /** `Object#toString` result references. */
     var symbolTag = '[object Symbol]';
@@ -6488,7 +6514,7 @@
      * @param opt - 创建配置
      * */
     function create(opt) {
-        var option = __assign({}, opt);
+        var option = __assign$1({}, opt);
         // updateOptionWhiteList类的配置是可更改的, 必须在使用时实时获取
         var Component = option.component, _a = option.namespace, namespace = _a === void 0 ? 'RENDER__BOX' : _a, _b = option.showKey, showKey = _b === void 0 ? 'show' : _b, _c = option.changeKey, changeKey = _c === void 0 ? 'onChange' : _c;
         /** 对组件进行强缓存, 只允许在_updateFlag变更时更新 */
@@ -6581,7 +6607,7 @@
                 state = option.omitState(state);
             }
             /** 创建组件state */
-            var _state = __assign(__assign(__assign({}, option.defaultState), state), (_a = {}, _a[showKey] = true, _a[changeKey] = function (cur) {
+            var _state = __assign$1(__assign$1(__assign$1({}, option.defaultState), state), (_a = {}, _a[showKey] = true, _a[changeKey] = function (cur) {
                 var _a;
                 setStateById(id, (_a = {}, _a[showKey] = cur, _a));
                 changeEvent.emit();
@@ -6672,7 +6698,7 @@
             function renderList() {
                 return ctx.list.map(function (_a) {
                     var id = _a.id, instance = _a.instance, state = _a.state, updateFlag = _a.updateFlag;
-                    return React__default['default'].createElement(MemoComponent, __assign({}, state, { key: id, instance: instance, _updateFlag: updateFlag }));
+                    return React__default['default'].createElement(MemoComponent, __assign$1({}, state, { key: id, instance: instance, _updateFlag: updateFlag }));
                 });
             }
             var Wrap = option.wrap;
@@ -6690,7 +6716,7 @@
                 change: changeEvent,
             },
             setOption: setOption,
-            getOption: function () { return (__assign({}, option)); },
+            getOption: function () { return (__assign$1({}, option)); },
         };
     }
 
