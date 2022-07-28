@@ -6686,7 +6686,10 @@
             var container = document.createElement('div');
             container.setAttribute('data-describe', 'RENDER-API DEFAULT TARGET');
             document.body.appendChild(container);
-            ReactDom__default['default'].render(React__default['default'].createElement(RenderTarget, null), container);
+            ReactDom__default['default'].render(React__default['default'].createElement(RenderTarget, null), container, function () {
+                // 在默认target渲染之前可能会有状态变更, 渲染完成后统一更新一次
+                defer(changeEvent.emit);
+            });
         }
         /** 挂载点 */
         function RenderTarget() {

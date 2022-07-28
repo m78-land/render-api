@@ -256,7 +256,10 @@ function create<S extends object, I = null>(opt: RenderApiOption<S>): RenderApiI
     const container = document.createElement('div');
     container.setAttribute('data-describe', 'RENDER-API DEFAULT TARGET');
     document.body.appendChild(container);
-    ReactDom.render(<RenderTarget />, container);
+    ReactDom.render(<RenderTarget />, container, () => {
+      // 在默认target渲染之前可能会有状态变更, 渲染完成后统一更新一次
+      defer(changeEvent.emit);
+    });
   }
 
   /** 挂载点 */

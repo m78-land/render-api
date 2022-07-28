@@ -187,7 +187,10 @@ function create(opt) {
         var container = document.createElement('div');
         container.setAttribute('data-describe', 'RENDER-API DEFAULT TARGET');
         document.body.appendChild(container);
-        ReactDom.render(React.createElement(RenderTarget, null), container);
+        ReactDom.render(React.createElement(RenderTarget, null), container, function () {
+            // 在默认target渲染之前可能会有状态变更, 渲染完成后统一更新一次
+            defer(changeEvent.emit);
+        });
     }
     /** 挂载点 */
     function RenderTarget() {
